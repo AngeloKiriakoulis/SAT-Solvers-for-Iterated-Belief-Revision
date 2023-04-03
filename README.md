@@ -1,4 +1,4 @@
-Iterated Belief Revision App using SAT Solvers
+#Iterated Belief Revision App using SAT Solvers
 
 This is an open-source application that uses SAT solvers to implement iterated belief revision in artificial intelligence systems. Iterated belief revision is a process that allows the system to update its beliefs based on new information. This is an essential aspect of AI systems that deal with uncertain or incomplete information. This app uses Boolean satisfiability (SAT) solvers to perform the belief revision process efficiently.
 
