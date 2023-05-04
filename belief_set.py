@@ -24,19 +24,19 @@ class BeliefSet:
         
 class Evidences:
     def __init__(self):
-        self.evidences = []
+        self.evidence_list = []
     
     def __repr__(self):
-        return f"Evidences: ({self.evidences})"
+        return f"Evidences: ({self.evidence_list})"
     
     def __str__(self):
-        return f"{self.evidences}"
+        return f"{self.evidence_list}"
     
     def add_evidence(self, evidence):
-        self.evidences.append(evidence)
+        self.evidence_list.append(evidence)
     
     def remove_evidence(self, evidence):
-        self.evidences.remove(evidence)
+        self.evidence_list.remove(evidence)
 
     def load(self, filename):
         with open(filename, 'r') as f:
