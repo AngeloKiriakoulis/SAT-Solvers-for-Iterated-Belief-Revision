@@ -101,7 +101,3 @@ class Marco:
     print("Minimum Unsatisfiable Subsets:")
     for i in self.mus_list:
       print(i)
-
-
-cnf = [[1],[2],[-1,-2]]
-marco = Marco(cnf)
