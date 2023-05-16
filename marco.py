@@ -1,10 +1,12 @@
 from pysat.solvers import Glucose3
 
 # Parse the constraint set in CNF form using the pySAT library
-cnf = [[1],[-1],[2],[-2],[1,2]]
+# cnf = [[1],[-1],[2],[-2],[1,2]]
+# cnf = [[-1,2],[-2,3],[-3]]
+# cnf = [[-1,2], [1,-2], [3], [-1,-3], [2,-3], [-3]]
+# cnf = [[-1,2],[-2,3],[-1],[-3],[2]]
 # cnf = [[1, 2, 3], [-1, -2], [2, 3], [-3, -1], [1], [2]]
-cnf = [[-1,2], [1,-2], [3], [-1,-3], [2,-3], [-3]]
-cnf = [[-1,2],[-2,3],[-3]]
+cnf = [[1],[-1,2],[-2],[-1]]
 
 # Compute one minimum unsatisfiability sub-set from a random unsatisfiable constraint subset that we input.
 def shrink(seed):
@@ -64,6 +66,7 @@ def getUnexplored(Map):
             lists_with_highest_num_positives = [formula]
         elif num_positives == highest_num_positives:
             lists_with_highest_num_positives.append(formula)
+        break
     for formula in lists_with_highest_num_positives:
         s = []
         for i in formula:
@@ -79,7 +82,7 @@ def isSatifiable(problem):
     return flag
 
 Map=[[i+1 for i in range(len(cnf))]]
-mus_list = []
+mus_list = [] 
 mss_list = []
 while True:
     seed_list = getUnexplored(Map)
