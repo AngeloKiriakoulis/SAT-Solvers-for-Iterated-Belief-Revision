@@ -1,3 +1,9 @@
-p cnf 4 2
-1 0
--2 0
+c This file represents new information to be added to an existing knowledge base.
+c Each line represents a clause in conjunctive normal form (CNF).
+c The literals are represented by positive or negative integers.
+c The file asserts that the conjunction of all clauses is true.
+
+p cnf 1 1
+-1 0
+
+

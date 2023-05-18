@@ -1,2 +1,6 @@
-p cnf 4 1
-1 -4 0
+c This file represents a query to be answered using a propositional logic solver.
+c It consists of a single clause, where the literals are represented by positive or negative integers.
+c The file asserts that the clause should evaluate to true.
+
+p cnf 1 1
+1 0
