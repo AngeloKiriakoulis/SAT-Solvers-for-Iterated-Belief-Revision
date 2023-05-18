@@ -1,15 +1,19 @@
 from pysat.formula import CNF
 
 class Set():
-    def __init__(self, filename):
-      self.elements = []
-      self.language = set()
-      self.load(filename)
-      self.find_language()
+    def __init__(self, filename = None, elements = []):
+      res = []
+      [res.append(x) for x in elements if x not in res]
+      self.elements = res
+      try:
+        self.load(filename)
+      except:
+        pass
+      self.language = self.find_language()
 
     def __add__(self, other):
       if isinstance(other, Set):
-        return self.elements + other.elements, self.language.intersection(other.language)
+        return Set(elements= self.elements + other.elements)
       else:
         raise TypeError("Unsupported operand type. Please provide another Set object.")
       
@@ -32,20 +36,22 @@ class Set():
       fp.close()
 
     def find_language(self):
+      language = set()
       try:
         for clause in self.elements.clauses:
           for literal in clause:
             atom = abs(literal)
-            self.language.add(atom)
+            language.add(atom)
       except AttributeError:
         try:
           for clause in self.elements:
             for literal in clause:
               atom = abs(literal)
-              self.language.add(atom)
+              language.add(atom)
         except TypeError:
           for sentence in self.elements:
             for clause in sentence:
               for literal in clause:
                 atom = abs(literal)
-                self.language.add(atom)
+                language.add(atom)
+        return language
