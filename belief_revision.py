@@ -1,57 +1,79 @@
-from pysat.formula import CNF
+from set import Set
+from marco import Marco
 from pysat.solvers import Glucose4
 
 class BeliefRevision:
-    def __init__(self, initial_kb):
-        self.initial_kb = initial_kb
-        self.revised_kb = initial_kb.copy()
-    
-    # Function to convert a list of propositional clauses to CNF form
-    def convert_to_cnf(self, clauses):
-        cnf = CNF()
-        for clause in clauses:
-            cnf.append(clause)
-        return cnf
+  """This class represents an algorithm designed to perform belief revision in a knowledge base. Belief revision is the process of updating or modifying a set of beliefs (knowledge base) based on new information or evidence."""
 
-    # Function to perform Iterated Belief Revision
-    def belief_revision(self, new_info_list):
-        for new_info in new_info_list:
-            # Convert the revised KB and new information to CNF
-            cnf = self.convert_to_cnf(self.revised_kb + new_info)
-            # Solve the CNF formula using PySAT's Glucose4 solver
-            with Glucose4(bootstrap_with=cnf.clauses) as solver:
-                # If the formula is unsatisfiable, find the subset of the clauses in the formula which are actually responsible for the conflict and return the revised KB.
-                # When a conflict is detected in the formula, it's often the case that only a small subset of the clauses in the formula are actually responsible for the conflict.
-                # Extract the non-conflicting clauses from the belief-revision process.
-                
-                if not solver.solve():
-                    conflicting_clauses = []
-                    for clause in cnf.clauses:
-                        for literal in clause:
-                            if True:
-                                conflicting_clauses.append(clause)
-                    #print(conflicting_clauses)            
-                    # if len(conflicting_clauses) == 0:
-                    #     break
-                    self.revised_kb = [clause for clause in self.revised_kb if clause not in conflicting_clauses]
-                    continue
-                #REVISION FUNCTION HERE
+  def __init__(self):
+    #The initial set of beliefs or knowledge base.
+    self.beliefs = Set("sets/kb.cnf")
+    #The new information or evidence to be incorporated into the knowledge base.
+    self.info = Set("sets/info.cnf")
+    #The integrity constraints of a domain
+    self.integrityConstraints = Set("sets/ic.cnf")
+    #The given query that need to be checked 
+    self.query = Set("sets/query.cnf")
 
-                # Otherwise, expand the initial knowlegde base with the new info.
-                self.revised_kb = self.revised_kb + new_info
-                print(self.revised_kb)
+    self.K_IC = self.beliefs + self.integrityConstraints
+    self.f_IC = self.info + self.integrityConstraints
 
-    # Function to check if a query stands in the revised knowledge base
-    def check_query(self, query):
-        cnf = self.convert_to_cnf(self.revised_kb + [query])
-        with Glucose4(bootstrap_with=cnf.clauses) as solver:
-            if solver.solve():
-                return True
-            else:
-                return False
+  def solve_SAT(self, cnf):
+    worlds = []
+    solver = Glucose4()
+    for clause in cnf:
+      solver.add_clause(clause)
+    flag = solver.solve()
+    for world in solver.enum_models():
+      worlds.append(world)
+    solver.delete()
+    return flag, worlds
 
+  def implies(self, source, query):
+    #Need to check cases where query are sub-lists of the source
+    query_flag, query_worlds = self.solve_SAT(query)
+    print(source, query)
+    solver = Glucose4()
+    for clause in source:
+      solver.add_clause(clause)
+    for q in query_worlds:
+      if not solver.solve(assumptions=q): return False
+    return True
+  
+  def query_answering(self):
+    f_IC_flag, f_IC_worlds = self.solve_SAT(self.f_IC.elements)
+    K_IC_flag, K_IC_worlds = self.solve_SAT(self.K_IC.elements)
+    if not f_IC_flag: return True
+    if not K_IC_flag: return self.implies(self.f_IC.elements, self.query.elements)
+    if len(self.query.language.intersection(self.f_IC.language)) == 0:
+      print(1)
+      if len(self.query.language.intersection(self.K_IC.language)) == 0: 
+        print(2)
+        return False
+      else: 
+        print(3)
+        return self.implies(self.K_IC.elements, self.query.elements)
+    self.revise()
 
-initial_kb = [[1, 2], [-1, 3], [-2, -3]]
-new_info_list = [[[1]],[[2]]]
-br_solver = BeliefRevision(initial_kb)
-br_solver.belief_revision(new_info_list)
+  def revise(self):
+    #Need to check if f_IC or K_IC are inconsistent first
+    f_IC_flag, f_IC_worlds = self.solve_SAT(self.f_IC.elements)
+    K_IC_flag, K_IC_worlds = self.solve_SAT(self.K_IC.elements)
+    if not f_IC_flag:
+      K_R_worlds = []
+    if not K_IC_flag:
+      K_R_worlds = f_IC_worlds
+    #Need to find the "effective" portion of f_IC
+
+    #Need to find the Minimum Unsatisfiable or Maximum Satisfiable subsets.
+    #Need to check if the constraint initial belief set and the effective portion is consistent
+    #If it is, the revised belief set is the intersection of their worlds. If not, distance between worlds need to be calculated.
+    cnf = self.K_IC + self.f_IC
+    print(cnf.elements)
+    flag, worlds = self.solve_SAT(cnf.elements)
+    if not flag:
+      Marco(cnf.elements)
+    else: print(worlds)
+
+br = BeliefRevision()
+print(br.query_answering())
