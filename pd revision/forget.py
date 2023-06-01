@@ -2,7 +2,14 @@ import itertools
 from cnf_converter import convert_to_cnf
 
 def forget(V, P):
-  """This function replaces the values in V based on P. It generates all combinations of True and False values for the variables in P using binary representation. For each combination, it iterates over V and replaces the values based on the condition. If a value in the sublist (clause) matches a value in P, it assigns the corresponding combination value. If the value is negative, it flips the combination value. The function then checks for clauses (represented as CNF clauses in V) with only one True occurrence and removes them. Finally, it removes any False occurrences from the remaining clauses. The function returns a list of different result lists based on the combinations of True and False values in the condition list. That list represent the disjunction of non-empty clauses created by "forgotten" variables, from each T/F combination"""
+  """This function replaces the values in V based on P. It generates all combinations of True and False
+  values for the variables in P using binary representation. For each combination, it iterates over V 
+  and replaces the values based on the condition. If a value in the sublist (clause) matches a value in
+  P, it assigns the corresponding combination value. If the value is negative, it flips the combination
+  value. The function then checks for clauses (represented as CNF clauses in V) with only one True occurrence and removes them. Finally, it removes any False occurrences from the remaining clauses.
+  The function returns a list of different result lists based on the combinations of True and False
+  values in the condition list. That list represent the disjunction of non-empty clauses created by
+  "forgotten" variables, from each T/F combination"""
 
   # Generate all combinations of True and False values for the P list
   combinations = list(itertools.product([False, True], repeat=len(P)))

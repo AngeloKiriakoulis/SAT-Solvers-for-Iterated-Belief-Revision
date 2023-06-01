@@ -1,7 +1,9 @@
 from sympy.logic.boolalg import to_cnf
 from sympy.abc import *
 
-"""The convert_to_cnf function takes a nested list v representing a logical expression in disjunctive form. The function then constructs a string expr to represent the logical expression in a string format that SymPy can evaluate and convert to CNF."""
+"""The convert_to_cnf function takes a nested list v representing a logical expression in disjunctive
+form. The function then constructs a string expr to represent the logical expression in a string format
+that SymPy can evaluate and convert to CNF."""
 def convert_to_cnf(v):
   expr = ""
   for set in v:
