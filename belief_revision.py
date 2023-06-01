@@ -3,7 +3,9 @@ from marco import Marco
 from pysat.solvers import Glucose4
 
 class BeliefRevision:
-  """This class represents an algorithm designed to perform belief revision in a knowledge base. Belief revision is the process of updating or modifying a set of beliefs (knowledge base) based on new information or evidence."""
+  """This class represents an algorithm designed to perform belief revision in a knowledge base.
+  Belief revision is the process of updating or modifying a set of beliefs (knowledge base) based
+  on new information or evidence."""
 
   def __init__(self):
     #The initial set of beliefs or knowledge base.
