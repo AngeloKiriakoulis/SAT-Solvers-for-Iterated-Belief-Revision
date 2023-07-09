@@ -21,19 +21,11 @@ class BeliefRevision:
 
   def __init__(self):
     logging.debug("entering br")
-    #The initial set of beliefs or knowledge base.
     self.beliefs = Set("RTI_k3_n100_m429_1.cnf")
     K = self.beliefs.elements
-    # # #The new information or evidence to be incorporated into the knowledge base.
-    # self.info = Set("sets/info.cnf")
-    # # #The integrity constraints of a domain
-    # self.integrityConstraints = Set("sets/ic.cnf")
-    # # #The given query that need to be checked 
-    # self.query = Set("sets/query.cnf")
-    # logging.debug("initializing sets")
-    K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,
-     -5]]
-    self.beliefs = Set(elements = K)
+    # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,
+    #  -5]]
+    # self.beliefs = Set(elements = K)
     A =  [[-1,-2]]
     self.info = Set(elements = A)
     B = [[-5],[1]]
