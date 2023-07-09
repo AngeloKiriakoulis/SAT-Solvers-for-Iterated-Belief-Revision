@@ -1,9 +1,0 @@
-c This file represents a set of beliefs in a propositional logic knowledge base.
-c Each line represents a clause in conjunctive normal form (CNF).
-c The literals are represented by positive or negative integers.
-c The file asserts the belief that the conjunction of all clauses is true.
-
-p cnf 3 2
-1 2 0
--2 3 0
-
