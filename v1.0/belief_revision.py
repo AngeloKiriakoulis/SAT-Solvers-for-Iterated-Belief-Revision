@@ -20,13 +20,14 @@ class BeliefRevision:
   on new information or evidence."""
 
   def __init__(self):
-    logging.debug("entering br")
-    self.beliefs = Set("RTI_k3_n100_m429_1.cnf")
-    K = self.beliefs.elements
-    # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,
-    #  -5]]
-    # self.beliefs = Set(elements = K)
-    A =  [[-1,-2]]
+    # logging.debug("entering br")
+    # self.beliefs = Set("RTI_k3_n100_m429_1.cnf")
+    # K = self.beliefs.elements
+    K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,
+     -5]]
+    self.beliefs = Set(elements = K)
+    # A =  [[-1,-2],[5]] HAS PROBLEMS ON self.W NEED TO CHECK
+    A = [[-1,-2]]
     self.info = Set(elements = A)
     B = [[-5],[1]]
     self.query = Set(elements = B)
@@ -54,16 +55,16 @@ class BeliefRevision:
   def implies(self, source, query, assumption = []):
     #Need to check cases where query are sub-lists of the source    
     prob = source.elements + negate(query.elements)
-    print(prob)
+    print("PROBLEM: ", prob, ", ASSUMPTIONS (stable variables): ", assumption)
     return not self.solve_SAT(prob, assumptions = assumption)[0]
     
   def query_answering(self):
-    logging.debug("entering qr")
+    # logging.debug("entering qr")
     #Step 1
     K_IC_flag = self.solve_SAT(self.K_IC.elements)
     if not K_IC_flag: return self.implies(self.info, self.query)
     #Step 1.5
-    logging.debug("entering forget")
+    # logging.debug("entering forget")
     K_r = Set(elements = forget(self.K_IC.elements,list(self.f_IC.language)))
     #Step 2
     if len(self.f_IC.language.intersection(self.query.language)) == 0: 
@@ -73,13 +74,13 @@ class BeliefRevision:
     f_IC_flag, f_IC_worlds = self.solve_SAT(self.f_IC.elements, find_worlds=True)
     if not f_IC_flag: return "New Information contain inconsistencies"
     #Steps 4-5
-    logging.debug("entering q")
+    # logging.debug("entering q")
     self.Q = self.find_Q(f_IC_worlds)
-    logging.debug("entering s")
+    # logging.debug("entering s")
     self.S = self.find_S(self.Q)
     print("S:",self.S)
     #Step 6
-    logging.debug("entering t")
+    # logging.debug("entering t")
     self.T = self.find_T(f_IC_worlds,self.S)
     print("T:",self.T)
     #Step 7
@@ -94,19 +95,17 @@ class BeliefRevision:
     self.R = [t[0] for t in self.T if t[1] == self.E]
     print("R:",self.R)
     #Step 10-11
-    logging.debug("making H")
+    # logging.debug("making H")
     dnf = []
     for clause in self.R:
       l2 = []
       for atom in clause:
         l2.append([atom])
       dnf.append(l2)
-    print("dnf:",dnf)
     self.H = boolpy(dnf)
     print("H:",self.H)
     #Step 12
-    logging.debug("answering")
-    print(self.implies(K_r,self.query,assumption=self.H))
+    print("ANSWER: ",self.implies(K_r,self.query,assumption=self.H))
 
   def find_Q(self, worlds):
     Q=[]
@@ -140,7 +139,7 @@ class BeliefRevision:
   #NEED TO CHECK MORE EFFICIENT WAY TO FIND THE MODELS NEEDED
   def find_T(self,worlds,S):
     T=[]
-    print("WORLDS_T:",worlds)
+    # print("WORLDS_T:",worlds)
     # W = [[atom for atom in world if atom in s] for world in worlds for s in S]
     W = []
     for s in S:
@@ -166,7 +165,7 @@ if __name__ == "__main__":
   start_time = time.time()
   # with ProcessPoolExecutor() as executor:
   BeliefRevision().query_answering()
-  logging.debug("exiting")
+  # logging.debug("exiting")
   end_time = time.time()
   execution_time = end_time - start_time
   print("Execution time:", execution_time, "seconds")
