@@ -16,6 +16,9 @@ class Set():
         return Set(elements= self.elements + other.elements)
       else:
         raise TypeError("Unsupported operand type. Please provide another Set object.")
+    
+    def __eq__(self):
+      return Set(elements = self.elements)
       
     def __str__(self):
       try:
@@ -54,4 +57,9 @@ class Set():
               for literal in clause:
                 atom = abs(literal)
                 language.add(atom)
-        return language
+      return language
+
+
+
+
+    
