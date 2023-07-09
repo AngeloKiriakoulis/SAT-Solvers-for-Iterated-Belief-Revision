@@ -1,4 +1,4 @@
-README FOR v1.0 of the belief revision app
+# README FOR v1.0 of the belief revision app
 
 Completed:
 - Classes that represent the sets of the Knowledge Base(KB), New Info and Querries and can read from files.
