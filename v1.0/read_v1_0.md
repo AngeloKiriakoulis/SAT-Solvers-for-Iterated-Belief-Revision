@@ -7,5 +7,5 @@ Completed:
 Problems:
 - Works with large KBs but only for 1/2 new info variables. This is due to bad practices on some algorithms:
     - CNF converters. I am using a CNF converter from the boolpy module that takes to much time for large formulas.
-    - Worlds searching: for higher variables i am creating too many worlds for my br algorithms to parse(findT and self.W)
+    - Worlds searching: for higher variables i am creating too many worlds for my br algorithms to parse (findT and self.W in belief_revision.py)
   
