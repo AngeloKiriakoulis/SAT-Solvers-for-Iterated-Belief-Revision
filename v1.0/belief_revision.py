@@ -34,7 +34,7 @@ class BeliefRevision:
     # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
     # self.beliefs = Set(elements = K)
     # A =  [[-1,-2]]
-    A =  [[-1,-2],[5]] # HAS PROBLEMS ON self.W NEED TO CHECK
+    A =  [[-1,-2],[5]] 
     self.info = Set(elements = A)
     B = [[-5],[1]]
     self.query = Set(elements = B)
