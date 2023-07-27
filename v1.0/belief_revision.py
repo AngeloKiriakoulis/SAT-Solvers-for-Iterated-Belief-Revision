@@ -20,14 +20,21 @@ class BeliefRevision:
   on new information or evidence."""
 
   def __init__(self):
-    # logging.debug("entering br")
-    # self.beliefs = Set("RTI_k3_n100_m429_1.cnf")
-    # K = self.beliefs.elements
-    K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,
-     -5]]
-    self.beliefs = Set(elements = K)
-    # A =  [[-1,-2],[5]] HAS PROBLEMS ON self.W NEED TO CHECK
-    A = [[-1,-2]]
+    logging.debug("entering br")
+    #The initial set of beliefs or knowledge base.
+    self.beliefs = Set("RTI_k3_n100_m429_1.cnf")
+    K = self.beliefs.elements
+    # # #The new information or evidence to be incorporated into the knowledge base.
+    # self.info = Set("sets/info.cnf")
+    # # #The integrity constraints of a domain
+    # self.integrityConstraints = Set("sets/ic.cnf")
+    # # #The given query that need to be checked 
+    # self.query = Set("sets/query.cnf")
+    # logging.debug("initializing sets")
+    # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
+    # self.beliefs = Set(elements = K)
+    # A =  [[-1,-2]]
+    A =  [[-1,-2],[5]] # HAS PROBLEMS ON self.W NEED TO CHECK
     self.info = Set(elements = A)
     B = [[-5],[1]]
     self.query = Set(elements = B)
@@ -38,7 +45,7 @@ class BeliefRevision:
       self.K_IC = Set(elements = K)
       self.f_IC = Set(elements = A)
     
-    self.weights = {0:0, 1: 2, 2: 1, 3: 1, 4: 2, 5: 3, 6: 2, 7: 1, 8: 1, 9: 2, 10: 3, 11:1,12:3, 42:1}
+    self.weights = {0: 0, 1: 2, 2: 1, 3: 1, 4: 2, 5: 3, 6: 2, 7: 1, 8: 1, 9: 2, 10: 3, 11:1,12:3, 42:1}
 
   def solve_SAT(self, cnf , find_worlds = False, assumptions = []) -> Tuple[bool, Optional[List[int]]]:
     worlds = []
@@ -55,16 +62,16 @@ class BeliefRevision:
   def implies(self, source, query, assumption = []):
     #Need to check cases where query are sub-lists of the source    
     prob = source.elements + negate(query.elements)
-    print("PROBLEM: ", prob, ", ASSUMPTIONS (stable variables): ", assumption)
+    print(prob)
     return not self.solve_SAT(prob, assumptions = assumption)[0]
     
   def query_answering(self):
-    # logging.debug("entering qr")
+    logging.debug("entering qr")
     #Step 1
     K_IC_flag = self.solve_SAT(self.K_IC.elements)
     if not K_IC_flag: return self.implies(self.info, self.query)
     #Step 1.5
-    # logging.debug("entering forget")
+    logging.debug("entering forget")
     K_r = Set(elements = forget(self.K_IC.elements,list(self.f_IC.language)))
     #Step 2
     if len(self.f_IC.language.intersection(self.query.language)) == 0: 
@@ -74,38 +81,48 @@ class BeliefRevision:
     f_IC_flag, f_IC_worlds = self.solve_SAT(self.f_IC.elements, find_worlds=True)
     if not f_IC_flag: return "New Information contain inconsistencies"
     #Steps 4-5
-    # logging.debug("entering q")
+    logging.debug("entering q")
     self.Q = self.find_Q(f_IC_worlds)
-    # logging.debug("entering s")
+    logging.debug("entering s")
     self.S = self.find_S(self.Q)
     print("S:",self.S)
     #Step 6
-    # logging.debug("entering t")
+    logging.debug("entering t")
     self.T = self.find_T(f_IC_worlds,self.S)
     print("T:",self.T)
     #Step 7
-    self.W = [abs(atom) for item in self.T for atom in item[1]]
+    self.W = [item[1] for item in self.T]
     print("W:",self.W)
     #Step 8
-    temp_dict = {atom: self.weights[atom] for atom in self.W}
+    # temp_dict = {item: [self.weights[atom]] for atom in self.W for item in atom}
+    temp_dict ={}
+    for atom in self.W:
+      c=0
+      for item in atom:
+        c+=self.weights[item]
+      temp_dict[tuple(atom)] = c
+    print("TEMP DICT:",temp_dict)
     min_value = min(temp_dict.values())
     self.E = [key for key, value in temp_dict.items() if value == min_value]
     print("E:",self.E)
+    print("E:",self.E[0])
     #Step 9
-    self.R = [t[0] for t in self.T if t[1] == self.E]
+    self.R = [t[0] for t in self.T if tuple(t[1]) == self.E[0]]
     print("R:",self.R)
     #Step 10-11
-    # logging.debug("making H")
+    logging.debug("making H")
     dnf = []
     for clause in self.R:
       l2 = []
       for atom in clause:
         l2.append([atom])
       dnf.append(l2)
+    print("dnf:",dnf)
     self.H = boolpy(dnf)
     print("H:",self.H)
     #Step 12
-    print("ANSWER: ",self.implies(K_r,self.query,assumption=self.H))
+    logging.debug("answering")
+    print(self.implies(K_r,self.query,assumption=self.H))
 
   def find_Q(self, worlds):
     Q=[]
@@ -139,7 +156,7 @@ class BeliefRevision:
   #NEED TO CHECK MORE EFFICIENT WAY TO FIND THE MODELS NEEDED
   def find_T(self,worlds,S):
     T=[]
-    # print("WORLDS_T:",worlds)
+    print("WORLDS_T:",worlds)
     # W = [[atom for atom in world if atom in s] for world in worlds for s in S]
     W = []
     for s in S:
@@ -147,7 +164,7 @@ class BeliefRevision:
         l = [atom for atom in w if atom in s or -atom in s]
         if l not in W:
           W.append(l)
-    print("W:  ", W)
+    print("Worlds:  ", W)
     min = inf
     for s in S:
       for w in W:
@@ -165,7 +182,7 @@ if __name__ == "__main__":
   start_time = time.time()
   # with ProcessPoolExecutor() as executor:
   BeliefRevision().query_answering()
-  # logging.debug("exiting")
+  logging.debug("exiting")
   end_time = time.time()
   execution_time = end_time - start_time
   print("Execution time:", execution_time, "seconds")

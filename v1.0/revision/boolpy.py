@@ -27,6 +27,7 @@ def boolpy(expression):
   else:
     expr = OR(*l)
   cnf = []
+  print("Expr:",expr,type(expr))
   # print("SIMPLE:",expr.simplify())
   cnf_expr = algebra.cnf(expr).simplify()
   if type(expr) == AND:
@@ -40,6 +41,7 @@ def boolpy(expression):
       cnf.append(l1)
 
 
+  print("CNF:",cnf)
 
 
   #SO QUICK UP UNTIL HERE, need to find a good way to convert back from the symbols to lists.
