@@ -10,7 +10,6 @@ from revision.forget import forget
 from revision.negation import negate
 from typing import Optional,Tuple,List
 import logging
-from concurrent.futures import ProcessPoolExecutor
 import os
 
 
@@ -24,11 +23,11 @@ class BeliefRevision:
   def __init__(self):
     #The initial set of beliefs or knowledge base.
 
-    # here = os.path.dirname(os.path.abspath(__file__))
-    # filename = os.path.join(here, 'RTI_k3_n100_m429_1.cnf')
-    # print(filename)
-    # self.beliefs = Set(filename=filename)
-    # K = self.beliefs.elements
+    here = os.path.dirname(os.path.abspath(__file__))
+    filename = os.path.join(here, 'RTI_k3_n100_m429_1.cnf')
+    print(filename)
+    self.beliefs = Set(filename=filename)
+    K = self.beliefs.elements
 
     # # #The new information or evidence to be incorporated into the knowledge base.
     # self.info = Set("sets/info.cnf")
@@ -37,7 +36,7 @@ class BeliefRevision:
     # # #The given query that need to be checked 
     # self.query = Set("sets/query.cnf")
     # logging.debug("initializing sets")
-    K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5],]
+    K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
     self.beliefs = Set(elements = K)  
     A =  [[-1,-2]]
     # A =  [[-1,-2],[5]] 
@@ -56,8 +55,11 @@ class BeliefRevision:
   def solve_SAT(self, cnf , find_worlds = False, assumptions = []) -> Tuple[bool, Optional[List[int]]]:
     worlds = []
     solver = Glucose4()
-    for clause in cnf:
-      solver.add_clause(clause)
+    for  clause in cnf:
+      try:
+        solver.add_clause(clause)
+      except RuntimeError:
+        solver.add_clause([clause])
     flag = solver.solve(assumptions)
     if find_worlds == True:
       for model in solver.enum_models():
@@ -67,7 +69,9 @@ class BeliefRevision:
 
   def implies(self, source, query, assumption = []):
     #Need to check cases where query are sub-lists of the source    
-    prob = np.append(source.elements,np.array(negate(query.elements)))
+    neg =  negate(query.elements)
+    print("NEG: ", neg)
+    prob = np.append(source.elements,neg)
     print(prob)
     return not self.solve_SAT(prob, assumptions = assumption)[0]
     

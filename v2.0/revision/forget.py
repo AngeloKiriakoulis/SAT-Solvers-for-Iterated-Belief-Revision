@@ -37,7 +37,7 @@ def forget(V, P):
   non_conflicting_clauses = []
 
   # Identify conflicting and non-conflicting clauses
-  for sublist in V:
+  for sublist in V.tolist():
     for item in P:
       if item in sublist or -item in sublist:
         conflicting_clauses.append(sublist)

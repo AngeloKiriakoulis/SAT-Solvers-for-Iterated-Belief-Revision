@@ -2,10 +2,11 @@ from typing import List
 import numpy as np
 from pysat.formula import CNF
 
+
 from revision.boolpy import boolpy
 # from revision.converter import *
 
-def negate(formula) -> List:
+def negate(formula):
   """
     # Encodes the negation of a given CNF formula using Tseitin encoding and specific list parsing.
 
@@ -30,11 +31,9 @@ def negate(formula) -> List:
   pos = CNF(from_clauses=formula.tolist())
 
   neg = pos.negate()
-  print(neg.clauses)
   #Checking if all clauses in the formula are just literals, and if so, returns the negation clauses directly
-  if all(len(sublist) == 1 for sublist in formula): 
-    print("!!!:", np.array(neg.clauses))
-    return np.array(neg.clauses)
+  if all(len(sublist) == 1 for sublist in formula):
+    return list(neg.clauses)
 
   """This block of code initializes an empty dictionary 'clause_dict' to store the clauses based on their auxiliary variables. It iterates through the negated clauses except the last one 'neg.clauses[:-2]'. For each clause, it checks the last element 'key' to determine if it's a negative auxiliary variable. If it is, and the key is not already present in 'clause_dict', it adds a new key-value pair with the key as the negative auxiliary variable and the value as a list containing the clause without the auxiliary variable. If the key is already present, it appends the clause to the existing list. The else block is used to skip non-negative auxiliary variables."""
 
@@ -58,10 +57,12 @@ def negate(formula) -> List:
       i-=1
       clause_dict[i] = [[atom]]
 
-  print(clause_dict)
-  print(list(clause_dict.values()))
+  #print(clause_dict)
+  #print(list(clause_dict.values()))
 
   #NEEDS FIX
   negation = boolpy(list(clause_dict.values()))
 
   return negation
+
+
