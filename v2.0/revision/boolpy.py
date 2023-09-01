@@ -1,6 +1,5 @@
 import boolean
 
-
 def boolpy(expression):
   algebra = boolean.BooleanAlgebra()
   l = {str(i): i for i in range(100)}
@@ -27,8 +26,6 @@ def boolpy(expression):
   else:
     expr = OR(*l)
   cnf = []
-  print("Expr:",expr,type(expr))
-  # print("SIMPLE:",expr.simplify())
   cnf_expr = algebra.cnf(expr).simplify()
   if type(expr) == AND:
     for arg in expr.args:
@@ -39,12 +36,6 @@ def boolpy(expression):
       for arg in list(clause.symbols):
         l1.append(int(str(arg)))
       cnf.append(l1)
-
-
-  print("CNF:",cnf)
-
-
-  #SO QUICK UP UNTIL HERE, need to find a good way to convert back from the symbols to lists.
   
   return cnf
 
