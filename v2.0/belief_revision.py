@@ -11,7 +11,7 @@ from revision.negation import negate
 from typing import Optional,Tuple,List
 import logging
 import os
-
+import random
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -25,7 +25,6 @@ class BeliefRevision:
 
     here = os.path.dirname(os.path.abspath(__file__))
     filename = os.path.join(here, 'RTI_k3_n100_m429_1.cnf')
-    print(filename)
     self.beliefs = Set(filename=filename)
     K = self.beliefs.elements
 
@@ -36,10 +35,10 @@ class BeliefRevision:
     # # #The given query that need to be checked 
     # self.query = Set("sets/query.cnf")
     # logging.debug("initializing sets")
-    K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
-    self.beliefs = Set(elements = K)  
-    A =  [[-1,-2]]
-    # A =  [[-1,-2],[5]] 
+    # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
+    # self.beliefs = Set(elements = K)  
+    # A =  [[-1,-2]]
+    A =  [[-1,-2],[5,3]] 
     self.info = Set(elements = A)
     B = [[-5],[1]]
     self.query = Set(elements = B)
@@ -50,7 +49,14 @@ class BeliefRevision:
       self.K_IC = Set(elements = K)
       self.f_IC = Set(elements = A)
     
-    self.weights = {0: 0, 1: 3, 2: 2, 3: 1, 4: 3, 5: 1, 6: 2, 7: 1, 8: 1, 9: 2, 10: 3, 11:4, 12:4, 13:4, 14:4, 15:2}
+    # self.weights = {0: 0, 1: 3, 2: 2, 3: 1, 4: 3, 5: 1, 6: 2, 7: 1, 8: 1, 9: 2, 10: 3, 11:4, 12:4, 13:4, 14:4, 15:2}
+
+    # Specify the number of pairs (100 in this case)
+    num_pairs = 100
+
+    # Generate a dictionary with random values
+    self.weights = {i: random.randint(0, 5) for i in range(num_pairs)}
+
 
   def solve_SAT(self, cnf , find_worlds = False, assumptions = []) -> Tuple[bool, Optional[List[int]]]:
     worlds = []
@@ -70,7 +76,6 @@ class BeliefRevision:
   def implies(self, source, query, assumption = []):
     #Need to check cases where query are sub-lists of the source    
     neg =  negate(query.elements)
-    print("NEG: ", neg)
     prob = np.append(source.elements,neg)
     print(prob)
     return not self.solve_SAT(prob, assumptions = assumption)[0]
@@ -118,7 +123,7 @@ class BeliefRevision:
       for atom in clause:
         l2.append([atom])
       dnf.append(l2)
-    self.H = boolpy(dnf)
+    self.H = boolpy(dnf, self.weights)
     print("H:",self.H)
     #Step 12
     print(self.implies(K_r,self.query,assumption=self.H))

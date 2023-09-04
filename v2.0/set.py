@@ -1,3 +1,4 @@
+import os
 from pysat.formula import CNF
 import numpy as np
 # The Set class encapsulates functionalities for managing and manipulating unique sets of integers. It ensures uniqueness of elements within the set and stores them in a compact NumPy array. The class enables set combination and comparison, supports addition and removal of elements, loading CNF clauses from files, and identifying the unique absolute values present in the set. It serves as a versatile toolkit for working with constraint-based problems and CNF representations.
@@ -40,22 +41,9 @@ class Set():
       return f"{self.elements.clauses}"
     except AttributeError:
       return f"{self.elements}"
-
-  def get_shape(self,elements):
-    if not isinstance(elements, list):
-    # If it's not a list, it's a scalar (i.e., it has shape ())
-      return ()
-    else:
-      # If it's a list, recursively get the shape of its elements
-      inner_shapes = [self.get_shape(item) for item in elements]
-      # Check if all inner shapes are the same, if not, return an empty tuple
-      if not all(shape == inner_shapes[0] for shape in inner_shapes):
-          return ()
-      # Return the shape as a tuple with the number of elements
-      return (len(elements),) + inner_shapes[0]
     
   def add(self, element):
-    self.elements = np.append(self.elements, element)
+    self.elements = np.append(self.elements, element,axis=0)
 
   def remove(self, element):
     # Find indices of elements to remove
@@ -63,7 +51,7 @@ class Set():
     
     if indices_to_remove.size > 0:
       # Remove elements at specified indices
-      self.elements = np.delete(self.elements, indices_to_remove)
+      self.elements = np.delete(self.elements, indices_to_remove,axis=0)
 
   # Load CNF clauses from a file
   def load(self, filename):

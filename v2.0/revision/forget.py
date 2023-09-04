@@ -49,7 +49,7 @@ def forget(V, P):
         non_conflicting_clauses.append(sublist)
 
   # Filter V to only include conflicting clauses
-  V = [i for i in V if i in conflicting_clauses]
+  V = [i for i in V.tolist() if i in conflicting_clauses]
   result_lists = []
   for combination in combinations:
     result_list = []
