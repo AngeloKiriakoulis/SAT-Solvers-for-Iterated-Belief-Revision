@@ -38,7 +38,7 @@ class BeliefRevision:
     # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
     # self.beliefs = Set(elements = K)  
     # A =  [[-1,-2]]
-    A =  [[-1,-2],[5,3]] 
+    A =  [[-1,-2],[5]] 
     self.info = Set(elements = A)
     B = [[-5],[1]]
     self.query = Set(elements = B)
@@ -85,7 +85,7 @@ class BeliefRevision:
     K_IC_flag = self.solve_SAT(self.K_IC.elements)
     if not K_IC_flag: return self.implies(self.info, self.query)
     #Step 1.5
-    K_r = Set(elements = forget(self.K_IC.elements,list(self.f_IC.language)))
+    K_r = Set(elements = forget(self.K_IC.elements,list(self.f_IC.language),new_info=self.f_IC.elements.tolist()))
     #Step 2
     if len(self.f_IC.language.intersection(self.query.language)) == 0: 
       print(self.implies(K_r,self.query))

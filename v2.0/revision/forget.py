@@ -1,14 +1,12 @@
 import itertools
-# from boolpy import boolpy
-# from revision.bool import boolpy
-# from revision.conv_test import reduce_array
 import logging
-
+from typing import List, Optional, Tuple
 from revision.boolpy import boolpy
+from pysat.solvers import Glucose4
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def forget(V, P):
+def forget(V, P, new_info):
   """
     ### "Forgets" the values of 'P' in a CNF formula 'V', by generating all combinations of True and False values for the variables in P.For each combination, it iterates over V and replaces the values based on the condition.
 
@@ -29,9 +27,15 @@ def forget(V, P):
         Finally, the method appends non-conflicting clauses (clauses not present in conflicting_clauses) to the resulting formula.
 
     """
-
-  # Generate all combinations of True and False values for the P list
-  combinations = list(itertools.product([False, True], repeat=len(P)))
+  
+  # Generate all combinations of True and False values for the P list. We only keep those that satisfy the New Information SAT problem.
+  combinations = []
+  for combination in list(itertools.product([False, True], repeat=len(P))):
+    print(combination)
+    combo_list = [P[index] for index, value in enumerate(combination) if value]
+    if solve_SAT(new_info,find_worlds=False,assumptions=combo_list)[0]:
+      combinations.append(combination)
+  print(combinations)
 
   conflicting_clauses = []
   non_conflicting_clauses = []
@@ -91,5 +95,17 @@ def forget(V, P):
 
   return cnf
 
-
-# forget([[3, 8], [-1,3], [-3, -2, -4]],[2])
+def solve_SAT(cnf , find_worlds = False, assumptions = []) -> Tuple[bool, Optional[List[int]]]:
+    worlds = []
+    solver = Glucose4()
+    for clause in cnf:
+      try:
+        solver.add_clause(clause)
+      except RuntimeError:
+        solver.add_clause([clause])
+    flag = solver.solve(assumptions)
+    if find_worlds == True:
+      for model in solver.enum_models():
+        worlds.append(model)
+    solver.delete()
+    return flag, worlds
