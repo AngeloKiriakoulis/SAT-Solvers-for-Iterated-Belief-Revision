@@ -38,7 +38,7 @@ class BeliefRevision:
     # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
     # self.beliefs = Set(elements = K)  
     # A =  [[-1,-2]]
-    A =  [[-1,-2],[5]] 
+    A =  [[-1,-2]] 
     self.info = Set(elements = A)
     B = [[-5],[1]]
     self.query = Set(elements = B)
@@ -75,8 +75,8 @@ class BeliefRevision:
 
   def implies(self, source, query, assumption = []):
     #Need to check cases where query are sub-lists of the source    
-    neg =  negate(query.elements)
-    prob = np.append(source.elements,neg)
+    neg =  np.array(negate(query.elements),dtype=list)
+    prob = np.append(source.elements,neg.tolist())
     print(prob)
     return not self.solve_SAT(prob, assumptions = assumption)[0]
     
@@ -123,7 +123,8 @@ class BeliefRevision:
       for atom in clause:
         l2.append([atom])
       dnf.append(l2)
-    self.H = boolpy(dnf, self.weights)
+    # self.H = boolpy(dnf, self.weights)
+    self.H = boolpy(dnf)
     print("H:",self.H)
     #Step 12
     print(self.implies(K_r,self.query,assumption=self.H))

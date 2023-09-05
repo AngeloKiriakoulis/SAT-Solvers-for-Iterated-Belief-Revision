@@ -28,18 +28,17 @@ def boolpy(expression):
   cnf = []
   ########### SOLVE THIS AND IT RUNS
   ### ΔΟΚΙΜΗ ΓΙΑ CNF κάθε expr.
-  for i in expr.args:
-    print(i, '\n\n')
-  # cnf_expr = algebra.cnf(expr)
-  # if type(expr) == AND:
-  #   for arg in expr.args:
-  #     cnf.append(int(str(arg)))
-  # else:
-  #   for clause in cnf_expr.args:
-  #     l1=[]
-  #     for arg in list(clause.symbols):
-  #       l1.append(int(str(arg)))
-  #     cnf.append(l1)
+  # for i in expr.args:
+  cnf_expr = algebra.cnf(expr)
+  if type(expr) == AND:
+    for arg in expr.args:
+      cnf.append(int(str(arg)))
+  else:
+    for clause in cnf_expr.args:
+      l1=[]
+      for arg in list(clause.symbols):
+        l1.append(int(str(arg)))
+      cnf.append(l1)
   
   return cnf
 
