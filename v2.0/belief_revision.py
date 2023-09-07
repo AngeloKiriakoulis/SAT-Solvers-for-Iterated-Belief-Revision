@@ -40,7 +40,7 @@ class BeliefRevision:
     # A =  [[-1,-2]]
     A =  [[-1,-2]] 
     self.info = Set(elements = A)
-    B = [[-5],[1]]
+    B = [[-5,1,7,9]]
     self.query = Set(elements = B)
     try: 
       self.K_IC = self.beliefs + self.integrityConstraints
@@ -61,7 +61,7 @@ class BeliefRevision:
   def solve_SAT(self, cnf , find_worlds = False, assumptions = []) -> Tuple[bool, Optional[List[int]]]:
     worlds = []
     solver = Glucose4()
-    for  clause in cnf:
+    for clause in cnf:
       try:
         solver.add_clause(clause)
       except RuntimeError:
@@ -75,10 +75,13 @@ class BeliefRevision:
 
   def implies(self, source, query, assumption = []):
     #Need to check cases where query are sub-lists of the source    
-    neg =  np.array(negate(query.elements),dtype=list)
-    prob = np.append(source.elements,neg.tolist())
-    print(prob)
-    return not self.solve_SAT(prob, assumptions = assumption)[0]
+    neg = negate(query.elements)
+    c = np.empty(1, dtype=object)
+    for i in range(len(neg)):
+      c[0] = neg[i]
+      source.elements = np.append(source.elements, c)
+    print(source.elements[-1])
+    return not self.solve_SAT(source.elements, assumptions = assumption)[0]
     
   def query_answering(self):
     #Step 1

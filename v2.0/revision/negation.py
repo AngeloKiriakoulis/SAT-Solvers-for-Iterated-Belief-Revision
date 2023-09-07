@@ -27,12 +27,12 @@ def negate(formula):
         formula = [[1, 2], [2]]
         ### Output: [[-1, -3], [-2, -3], [1, 2, 3], [3, -2]]
     """
-  print(formula.tolist())
+  print(formula)
   pos = CNF(from_clauses=formula.tolist())
 
   neg = pos.negate()
   #Checking if all clauses in the formula are just literals, and if so, returns the negation clauses directly
-  if all(len(sublist) == 1 for sublist in formula):
+  if all(len(sublist) == 1 for sublist in pos):
     return list(neg.clauses)
 
   """This block of code initializes an empty dictionary 'clause_dict' to store the clauses based on their auxiliary variables. It iterates through the negated clauses except the last one 'neg.clauses[:-2]'. For each clause, it checks the last element 'key' to determine if it's a negative auxiliary variable. If it is, and the key is not already present in 'clause_dict', it adds a new key-value pair with the key as the negative auxiliary variable and the value as a list containing the clause without the auxiliary variable. If the key is already present, it appends the clause to the existing list. The else block is used to skip non-negative auxiliary variables."""
@@ -61,8 +61,10 @@ def negate(formula):
   #print(list(clause_dict.values()))
 
   #NEEDS FIX
-  negation = boolpy(list(clause_dict.values()))
-
-  return negation
-
+  if len(clause_dict)>1:
+    negation = boolpy(list(clause_dict.values()))
+    return negation
+  else:
+    negation = list(clause_dict.values())[0]
+    return negation
 
