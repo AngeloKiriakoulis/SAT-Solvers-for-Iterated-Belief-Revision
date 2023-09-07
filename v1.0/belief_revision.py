@@ -31,12 +31,12 @@ class BeliefRevision:
     # # #The given query that need to be checked 
     # self.query = Set("sets/query.cnf")
     # logging.debug("initializing sets")
-    # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
-    # self.beliefs = Set(elements = K)
-    # A =  [[-1,-2]]
-    A =  [[-1,-2],[5]] 
+    K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
+    self.beliefs = Set(elements = K)
+    A =  [[-1,-2]]
+    # A =  [[-1,-2],[5]] 
     self.info = Set(elements = A)
-    B = [[-5],[1]]
+    B = [[1],[2]]
     self.query = Set(elements = B)
     try: 
       self.K_IC = self.beliefs + self.integrityConstraints
@@ -156,7 +156,6 @@ class BeliefRevision:
   #NEED TO CHECK MORE EFFICIENT WAY TO FIND THE MODELS NEEDED
   def find_T(self,worlds,S):
     T=[]
-    print("WORLDS_T:",worlds)
     # W = [[atom for atom in world if atom in s] for world in worlds for s in S]
     W = []
     for s in S:
@@ -164,7 +163,6 @@ class BeliefRevision:
         l = [atom for atom in w if atom in s or -atom in s]
         if l not in W:
           W.append(l)
-    print("Worlds:  ", W)
     min = inf
     for s in S:
       for w in W:
