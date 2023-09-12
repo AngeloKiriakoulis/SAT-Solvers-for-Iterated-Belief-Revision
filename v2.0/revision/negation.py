@@ -27,7 +27,6 @@ def negate(formula):
         formula = [[1, 2], [2]]
         ### Output: [[-1, -3], [-2, -3], [1, 2, 3], [3, -2]]
     """
-  print(formula)
   pos = CNF(from_clauses=formula.tolist())
 
   neg = pos.negate()
@@ -46,7 +45,6 @@ def negate(formula):
       clause_dict[key].append(clause[:-1])
     else:continue
   keys_list = [-x for x in list(clause_dict.keys())]
-  print(keys_list)
 
   """This block of code compares 'keys_list' with the last clause of 'neg.clauses'. If they are not equal, it means that some negated literals are missing in 'clause_dict'. It then proceeds to fill in the missing negated literals. It initializes a variable i with the last key in 'clause_dict.keys()'. It creates a list add_atoms containing negated literals from the last clause that are not present in keys_list. It then iterates over each atom in add_atoms, decrements i by 1, and adds a new key-value pair to dictionary"""
 

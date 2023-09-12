@@ -2,6 +2,7 @@ from math import inf
 import time
 import numpy as np
 import psutil
+from tseitin import Tseitin
 from revision.boolpy import boolpy
 # from revision.conv_test import reduce_array
 from set import Set
@@ -35,12 +36,11 @@ class BeliefRevision:
     # # #The given query that need to be checked 
     # self.query = Set("sets/query.cnf")
     # logging.debug("initializing sets")
-    # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
-    # self.beliefs = Set(elements = K)  
-    # A =  [[-1,-2]]
+    K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
+    self.beliefs = Set(elements = K)  
     A =  [[-1,-2]] 
     self.info = Set(elements = A)
-    B = [[-5,1,7,9]]
+    B = [[-5],[1]]
     self.query = Set(elements = B)
     try: 
       self.K_IC = self.beliefs + self.integrityConstraints
@@ -59,29 +59,49 @@ class BeliefRevision:
 
 
   def solve_SAT(self, cnf , find_worlds = False, assumptions = []) -> Tuple[bool, Optional[List[int]]]:
-    worlds = []
-    solver = Glucose4()
+    worlds = [] # Initialize an empty list to store possible worlds
+    solver = Glucose4() # Create a Glucose4 solver instance
+
+    # Loop through the clauses in 'cnf' and add them to the solver
     for clause in cnf:
-      try:
-        solver.add_clause(clause)
-      except RuntimeError:
-        solver.add_clause([clause])
-    flag = solver.solve(assumptions)
+        try:
+            solver.add_clause(clause)
+        except RuntimeError:
+            # If a RuntimeError occurs when adding a clause, add a single-element list
+            solver.add_clause([clause])
+    try:
+      flag = solver.solve(assumptions) # Attempt to solve the SAT problem with the specified assumptions
+    except TypeError: #More than 1 H results 
+      for assumption in assumptions:
+        flag = solver.solve(assumption)
+        if flag:break
+
+    # If 'find_worlds' is True, enumerate all satisfying models and store them in 'worlds'
     if find_worlds == True:
-      for model in solver.enum_models():
-        worlds.append(model)
-    solver.delete()
+        for model in solver.enum_models():
+            worlds.append(model)
+
+    solver.delete() # Clean up and delete the solver instance
+
+    # Return the result of the solver (flag) and the list of satisfying worlds
     return flag, worlds
 
+
   def implies(self, source, query, assumption = []):
-    #Need to check cases where query are sub-lists of the source    
-    neg = negate(query.elements)
-    c = np.empty(1, dtype=object)
+    #Need to check cases where query are sub-lists of the source 
+    neg = negate(query.elements) # Negate the elements in the 'query' and store them in 'neg'
+
+    """Numpy treats anything that is a list or tuple as a special item that you want to convert into an array at the outer level. To append an element to an object array without having the fact that it is a list in your way, you have to first create an array or element that is empty."""
+    c = np.empty(1, dtype=object) 
+
+    # Loop through the elements in 'neg' and append them to 'source.elements'
     for i in range(len(neg)):
-      c[0] = neg[i]
-      source.elements = np.append(source.elements, c)
-    print(source.elements[-1])
-    return not self.solve_SAT(source.elements, assumptions = assumption)[0]
+        c[0] = neg[i]
+        source.elements = np.append(source.elements, c)
+    
+    # Return the result of solving a SAT problem, to check if the implication is true.
+    return not self.solve_SAT(source.elements, assumptions=assumption)[0]
+
     
   def query_answering(self):
     #Step 1
@@ -126,7 +146,6 @@ class BeliefRevision:
       for atom in clause:
         l2.append([atom])
       dnf.append(l2)
-    # self.H = boolpy(dnf, self.weights)
     self.H = boolpy(dnf)
     print("H:",self.H)
     #Step 12

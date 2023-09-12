@@ -1,6 +1,8 @@
 import itertools
 import logging
 from typing import List, Optional, Tuple
+
+from tseitin import Tseitin
 from revision.boolpy import boolpy
 from pysat.solvers import Glucose4
 
@@ -31,11 +33,9 @@ def forget(V, P, new_info):
   # Generate all combinations of True and False values for the P list. We only keep those that satisfy the New Information SAT problem.
   combinations = []
   for combination in list(itertools.product([False, True], repeat=len(P))):
-    print(combination)
     combo_list = [P[index] for index, value in enumerate(combination) if value]
     if solve_SAT(new_info,find_worlds=False,assumptions=combo_list)[0]:
       combinations.append(combination)
-  print(combinations)
 
   conflicting_clauses = []
   non_conflicting_clauses = []
@@ -87,7 +87,8 @@ def forget(V, P, new_info):
     else:
         continue
   #NEEDS FIX
-  cnf = boolpy(result_lists)
+  # cnf = boolpy(result_lists)
+  cnf = Tseitin(result_lists).transformation
 
   # Append non-conflicting clauses to the resultingCNF formula
   for clause in non_conflicting_clauses:
