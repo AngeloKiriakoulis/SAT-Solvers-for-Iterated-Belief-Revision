@@ -26,9 +26,7 @@ def boolpy(expression):
   else:
     expr = OR(*l)
   cnf = []
-  ########### SOLVE THIS AND IT RUNS
-  ### ΔΟΚΙΜΗ ΓΙΑ CNF κάθε expr.
-  # for i in expr.args:
+
   cnf_expr = algebra.cnf(expr)
   if type(expr) == AND:
     for arg in expr.args:

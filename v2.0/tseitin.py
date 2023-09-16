@@ -1,13 +1,27 @@
+import numpy as np
+from revision.negation import negate
+
 class Tseitin():
-  def __init__(self,clauses) -> None:
+  def __init__(self,clauses,max) -> None:
     self.transformation = list()
-    self.max_literal = 100
+    self.max_literal = max
+    self.aux_var_dict = dict()
     for component in clauses:
+      self.aux_vars = list()
       result = self.to_cnf(component)
       for clause in result:
         self.transformation.append(clause)
+      self.max_literal += 1
+      self.aux_var_dict[self.max_literal] = self.aux_vars
+    aux_result = self.aux_part()
+    for result in aux_result:
+      self.transformation.append(result)
     
-
+    # for aux_var in range(len(clauses)):
+    #   self.max_literal+=1
+    #   self.aux_vars.append(self.max_literal)
+    # self.transformation.append(self.aux_vars)
+      
   def to_cnf(self,component):
     literals = set()
 
@@ -26,15 +40,22 @@ class Tseitin():
       clause = next_clause
       for i in clause_copy:
         yield [-i,clause[-1]]
+      yield [self.max_literal]
+      self.aux_vars.append(self.max_literal)
 
-	
-# l1 = Tseitin([[25,82,3], [35], [-55, -68], [-60, 93], [-29, 69], [36, -42], [16, -33], [63, 92], [-63, -89], [34, -55]]).transformation
-# print("L1: ", *l1, '\n')
-
-# l2 = Tseitin([[35, 37], [20, -69], [-55, -68], [76, 92], [49, 74], [-60, 93], [-5, 10], [-29, 69], [72, 86], [36, -42], [-63, -89], [26, -96]]).transformation
-# print("L2: ", *l2, '\n')
-
-# l3 = Tseitin([[35, 95], [25, 82], [56, 98], [14, -87], [-21, 96], [-78, -83], [-17, 90], [-71, 93], [16, -33], [63, 92], [34, -55]]).transformation
-# print("L3: ", *l3, '\n')
-
-# l3 = Tseitin([[[98,99,35, 95], [25, 82], [56, 98], [14, -87], [-21, 96], [-78, -83], [-17, 90], [-71, 93], [16, -33], [63, 92], [34, -55]],[[35, 37], [20, -69], [-55, -68], [76, 92], [49, 74], [-60, 93], [-5, 10], [-29, 69], [72, 86], [36, -42], [-63, -89], [26, -96]],[[25,82,3], [35], [-55, -68], [-60, 93], [-29, 69], [36, -42], [16, -33], [63, 92], [-63, -89], [34, -55]]]).transformation
+  def aux_part(self):
+    for item in self.aux_var_dict.items():
+      aux = item[0]
+      clauses = item[1]
+      for clause in clauses:
+        yield [clause,-aux]
+      yield [-i for i in clauses] + [aux]
+      yield [aux]
+    aux = self.max_literal + 1
+    or_clauses = list(self.aux_var_dict.keys())
+    yield [*or_clauses]
+# ts = Tseitin([[[1,2],[3]],[[4,5],[6,7,8]]],8)
+# print(ts.transformation)
+# ts = Tseitin([[[3,4]],[[-5]]],5)
+# print(ts.transformation)
+    

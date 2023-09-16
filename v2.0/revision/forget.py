@@ -31,12 +31,14 @@ def forget(V, P, new_info):
     """
   
   # Generate all combinations of True and False values for the P list. We only keep those that satisfy the New Information SAT problem.
-  combinations = []
-  for combination in list(itertools.product([False, True], repeat=len(P))):
-    combo_list = [P[index] for index, value in enumerate(combination) if value]
-    if solve_SAT(new_info,find_worlds=False,assumptions=combo_list)[0]:
-      combinations.append(combination)
+  # combinations = []
+  # for combination in list(itertools.product([False, True], repeat=len(P))):
+  #   combo_list = [P[index] for index, value in enumerate(combination) if value]
+  #   if solve_SAT(new_info,find_worlds=False,assumptions=combo_list)[0]:
+  #     combinations.append(combination)
 
+
+  combinations = list(itertools.product([False,True], repeat=len(P)))
   conflicting_clauses = []
   non_conflicting_clauses = []
 
@@ -82,14 +84,16 @@ def forget(V, P, new_info):
 
     # Check if any False occurrence should be removed from the result list
     result_list = [[value for value in clause if value is not False] for clause in result_list]
-    if any(result_list) and result_list not in result_lists:  # Only add non-empty and new result lists
+    if any(result_list) and result_list not in result_lists and solve_SAT(result_list)[0]:  # Only add non-empty and new result lists
         result_lists.append(result_list)
     else:
         continue
   #NEEDS FIX
   # cnf = boolpy(result_lists)
-  cnf = Tseitin(result_lists).transformation
-
+  max_element = max([element for row in V for element in row])
+  print(max_element)
+  cnf = Tseitin(result_lists,max_element).transformation
+  
   # Append non-conflicting clauses to the resultingCNF formula
   for clause in non_conflicting_clauses:
       cnf.append(clause)

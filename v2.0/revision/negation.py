@@ -1,5 +1,4 @@
 from typing import List
-import numpy as np
 from pysat.formula import CNF
 
 
@@ -58,7 +57,6 @@ def negate(formula):
   #print(clause_dict)
   #print(list(clause_dict.values()))
 
-  #NEEDS FIX
   if len(clause_dict)>1:
     negation = boolpy(list(clause_dict.values()))
     return negation

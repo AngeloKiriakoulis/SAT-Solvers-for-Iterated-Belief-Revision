@@ -55,7 +55,7 @@ class BeliefRevision:
     num_pairs = 100
 
     # Generate a dictionary with random values
-    self.weights = {i: random.randint(0, 5) for i in range(num_pairs)}
+    self.weights = {i: random.randint(0, 10) for i in range(num_pairs)}
 
 
   def solve_SAT(self, cnf , find_worlds = False, assumptions = []) -> Tuple[bool, Optional[List[int]]]:
@@ -78,8 +78,9 @@ class BeliefRevision:
 
     # If 'find_worlds' is True, enumerate all satisfying models and store them in 'worlds'
     if find_worlds == True:
-        for model in solver.enum_models():
-            worlds.append(model)
+      for model in solver.enum_models():
+          worlds.append(model)
+      # print("WORLDS: ", worlds)
 
     solver.delete() # Clean up and delete the solver instance
 
@@ -98,9 +99,9 @@ class BeliefRevision:
     for i in range(len(neg)):
         c[0] = neg[i]
         source.elements = np.append(source.elements, c)
-    
+    print(source.elements, assumption)
     # Return the result of solving a SAT problem, to check if the implication is true.
-    return not self.solve_SAT(source.elements, assumptions=assumption)[0]
+    return not self.solve_SAT(source.elements,find_worlds=True, assumptions=assumption)[0]
 
     
   def query_answering(self):
@@ -204,7 +205,6 @@ class BeliefRevision:
 
 if __name__ == "__main__":
   start_time = time.time()
-  # with ProcessPoolExecutor() as executor:
   BeliefRevision().query_answering()
   end_time = time.time()
   execution_time = end_time - start_time
