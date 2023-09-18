@@ -88,10 +88,8 @@ def forget(V, P, new_info):
         result_lists.append(result_list)
     else:
         continue
-  #NEEDS FIX
-  # cnf = boolpy(result_lists)
+
   max_element = max([element for row in V for element in row])
-  print(max_element)
   cnf = Tseitin(result_lists,max_element).transformation
   
   # Append non-conflicting clauses to the resultingCNF formula

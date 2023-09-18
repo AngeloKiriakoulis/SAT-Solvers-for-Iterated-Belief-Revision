@@ -36,8 +36,8 @@ class BeliefRevision:
     # # #The given query that need to be checked 
     # self.query = Set("sets/query.cnf")
     # logging.debug("initializing sets")
-    K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
-    self.beliefs = Set(elements = K)  
+    # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
+    # self.beliefs = Set(elements = K)  
     A =  [[-1,-2]] 
     self.info = Set(elements = A)
     B = [[-5],[1]]
@@ -49,14 +49,12 @@ class BeliefRevision:
       self.K_IC = Set(elements = K)
       self.f_IC = Set(elements = A)
     
+    self.max_element = max([element for row in K for element in row])
     
 
-    # Specify the number of pairs (100 in this case)
-    num_pairs = 100
-
     # Generate a dictionary with random values
-    # self.weights = {i: random.randint(0, 10) for i in range(num_pairs+1)}
-    self.weights = {0: 0, 1: 2, 2: 1, 3: 1, 4: 2, 5: 3}
+    self.weights = {i: random.randint(1, 5) for i in range(1,self.max_element+1)}
+    print("Weights: ", self.weights)
 
 
   def solve_SAT(self, cnf , find_worlds = False, assumptions = []) -> Tuple[bool, Optional[List[int]]]:
@@ -72,7 +70,7 @@ class BeliefRevision:
             solver.add_clause([clause])
     try:
       flag = solver.solve(assumptions) # Attempt to solve the SAT problem with the specified assumptions
-    except TypeError: #More than 1 H results 
+    except TypeError: #More than 1 H results, need to check the disjunction of the result. If every result is false then all false, if one of them is true, all is true. 
       for assumption in assumptions:
         flag = solver.solve(assumption)
         if flag:break
@@ -100,7 +98,7 @@ class BeliefRevision:
     for i in range(len(neg)):
         c[0] = neg[i]
         source.elements = np.append(source.elements, c)
-    print(source.elements, assumption)
+    # print(source.elements, assumption)
     # Return the result of solving a SAT problem, to check if the implication is true.
     return not self.solve_SAT(source.elements,find_worlds=True, assumptions=assumption)[0]
 
