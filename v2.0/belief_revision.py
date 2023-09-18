@@ -49,13 +49,14 @@ class BeliefRevision:
       self.K_IC = Set(elements = K)
       self.f_IC = Set(elements = A)
     
-    # self.weights = {0: 0, 1: 3, 2: 2, 3: 1, 4: 3, 5: 1, 6: 2, 7: 1, 8: 1, 9: 2, 10: 3, 11:4, 12:4, 13:4, 14:4, 15:2}
+    
 
     # Specify the number of pairs (100 in this case)
     num_pairs = 100
 
     # Generate a dictionary with random values
-    self.weights = {i: random.randint(0, 10) for i in range(num_pairs)}
+    # self.weights = {i: random.randint(0, 10) for i in range(num_pairs+1)}
+    self.weights = {0: 0, 1: 2, 2: 1, 3: 1, 4: 2, 5: 3}
 
 
   def solve_SAT(self, cnf , find_worlds = False, assumptions = []) -> Tuple[bool, Optional[List[int]]]:
