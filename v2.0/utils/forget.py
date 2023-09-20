@@ -2,8 +2,7 @@ import itertools
 import logging
 from typing import List, Optional, Tuple
 
-from tseitin import Tseitin
-from revision.boolpy import boolpy
+from utils.tseitin import Tseitin
 from pysat.solvers import Glucose4
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')

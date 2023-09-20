@@ -2,13 +2,15 @@ from math import inf
 import time
 import numpy as np
 import psutil
-from tseitin import Tseitin
-from revision.boolpy import boolpy
-# from revision.conv_test import reduce_array
-from set import Set
+
+from utils.tseitin import Tseitin
+from utils.set import Set
+from utils.boolpy import boolpy
+from utils.forget import forget
+from utils.negation import negate
+from utils.replace_largest import replace_larger_elements
 from pysat.solvers import Glucose4
-from revision.forget import forget
-from revision.negation import negate
+
 from typing import Optional,Tuple,List
 import logging
 import os
@@ -27,7 +29,7 @@ class BeliefRevision:
     here = os.path.dirname(os.path.abspath(__file__))
     filename = os.path.join(here, 'RTI_k3_n100_m429_1.cnf')
     self.beliefs = Set(filename=filename)
-    K = self.beliefs.elements
+    K = self.beliefs.elements.tolist()
 
     # # #The new information or evidence to be incorporated into the knowledge base.
     # self.info = Set("sets/info.cnf")
@@ -36,11 +38,16 @@ class BeliefRevision:
     # # #The given query that need to be checked 
     # self.query = Set("sets/query.cnf")
     # logging.debug("initializing sets")
-    # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
-    # self.beliefs = Set(elements = K)  
-    A =  [[-1,-2]] 
+    K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
+    A = [[-1,-2]]
+    B = [[1],[-5]]
+
+    self.max_element = max([element for row in K for element in row])
+    # Generate a dictionary with random values
+    self.weights = {i: random.randint(1, 5) for i in range(1,self.max_element+1)}
+    K,A,B,self.weights = replace_larger_elements(K,A,B,self.weights)
+    self.beliefs = Set(elements = K) 
     self.info = Set(elements = A)
-    B = [[-5],[1]]
     self.query = Set(elements = B)
     try: 
       self.K_IC = self.beliefs + self.integrityConstraints
@@ -49,12 +56,6 @@ class BeliefRevision:
       self.K_IC = Set(elements = K)
       self.f_IC = Set(elements = A)
     
-    self.max_element = max([element for row in K for element in row])
-    
-
-    # Generate a dictionary with random values
-    self.weights = {i: random.randint(1, 5) for i in range(1,self.max_element+1)}
-    print("Weights: ", self.weights)
 
 
   def solve_SAT(self, cnf , find_worlds = False, assumptions = []) -> Tuple[bool, Optional[List[int]]]:
@@ -69,10 +70,10 @@ class BeliefRevision:
             # If a RuntimeError occurs when adding a clause, add a single-element list
             solver.add_clause([clause])
     try:
-      flag = solver.solve(assumptions) # Attempt to solve the SAT problem with the specified assumptions
+      flag = solver.solve(assumptions=assumptions) # Attempt to solve the SAT problem with the specified assumptions
     except TypeError: #More than 1 H results, need to check the disjunction of the result. If every result is false then all false, if one of them is true, all is true. 
       for assumption in assumptions:
-        flag = solver.solve(assumption)
+        flag = solver.solve(assumptions=assumption)
         if flag:break
 
     # If 'find_worlds' is True, enumerate all satisfying models and store them in 'worlds'
@@ -90,7 +91,9 @@ class BeliefRevision:
   def implies(self, source, query, assumption = []):
     #Need to check cases where query are sub-lists of the source 
     neg = negate(query.elements) # Negate the elements in the 'query' and store them in 'neg'
-
+    if len(source.elements) == 1:
+      ###pass
+      pass####
     """Numpy treats anything that is a list or tuple as a special item that you want to convert into an array at the outer level. To append an element to an object array without having the fact that it is a list in your way, you have to first create an array or element that is empty."""
     c = np.empty(1, dtype=object) 
 
@@ -98,15 +101,23 @@ class BeliefRevision:
     for i in range(len(neg)):
         c[0] = neg[i]
         source.elements = np.append(source.elements, c)
-    # print(source.elements, assumption)
+    print(source.elements.tolist(), assumption)
     # Return the result of solving a SAT problem, to check if the implication is true.
-    return not self.solve_SAT(source.elements,find_worlds=True, assumptions=assumption)[0]
+    return not self.solve_SAT(source.elements.tolist(),find_worlds=True, assumptions=assumption)[0]
 
     
   def query_answering(self):
     #Step 1
     K_IC_flag = self.solve_SAT(self.K_IC.elements)
     if not K_IC_flag: return self.implies(self.info, self.query)
+    if self.implies(self.K_IC,self.f_IC):
+      print("KB Implies New Info!")
+      if self.implies(self.f_IC, self.query):
+        print("New Info Implies Query")
+        return
+      else:
+        print("Query in contradiction with New Info")
+        return
     #Step 1.5
     K_r = Set(elements = forget(self.K_IC.elements,list(self.f_IC.language),new_info=self.f_IC.elements.tolist()))
     #Step 2
@@ -115,7 +126,7 @@ class BeliefRevision:
       return
     #Step 3
     f_IC_flag, f_IC_worlds = self.solve_SAT(self.f_IC.elements, find_worlds=True)
-    if not f_IC_flag: return "New Information contain inconsistencies"
+    if not f_IC_flag: return "New Information contains inconsistencies"
     #Steps 4-5
     self.Q = self.find_Q(f_IC_worlds)
     self.S = self.find_S(self.Q)

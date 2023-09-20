@@ -31,6 +31,8 @@ def boolpy(expression):
   if type(expr) == AND:
     for arg in expr.args:
       cnf.append(int(str(arg)))
+  elif type(expr) == symbol:
+    cnf = [int(str(expr))]
   else:
     for clause in cnf_expr.args:
       l1=[]

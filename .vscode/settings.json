@@ -1,0 +1,6 @@
+{
+  "python.analysis.extraPaths": [
+    "./v2.0/utils",
+    "./v2.0"
+  ]
+}
