@@ -1,7 +1,7 @@
 from typing import List
 from pysat.formula import CNF
 
-from revision.boolpy import boolpy
+from revision.symbols import boolpy
 # from revision.converter import *
 
 def negate(formula) -> List:

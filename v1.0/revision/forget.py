@@ -1,10 +1,6 @@
 import itertools
-# from boolpy import boolpy
-# from revision.bool import boolpy
-# from revision.conv_test import reduce_array
 import logging
-
-from revision.boolpy import boolpy
+from revision.symbols import boolpy
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -91,5 +87,3 @@ def forget(V, P):
 
   return cnf
 
-
-# forget([[3, 8], [-1,3], [-3, -2, -4]],[2])

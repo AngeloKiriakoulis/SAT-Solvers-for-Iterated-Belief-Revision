@@ -1,4 +1,5 @@
 import boolean
+import sympy
 
 
 def boolpy(expression):
@@ -29,7 +30,8 @@ def boolpy(expression):
   cnf = []
   print("Expr:",expr,type(expr))
   # print("SIMPLE:",expr.simplify())
-  cnf_expr = algebra.cnf(expr).simplify()
+  print("CNF!@#: ", sympy.to_cnf(expr))
+  # cnf_expr = algebra.cnf(expr).simplify()
   if type(expr) == AND:
     for arg in expr.args:
       cnf.append(int(str(arg)))
@@ -44,7 +46,5 @@ def boolpy(expression):
   print("CNF:",cnf)
 
 
-  #SO QUICK UP UNTIL HERE, need to find a good way to convert back from the symbols to lists.
-  
   return cnf
 

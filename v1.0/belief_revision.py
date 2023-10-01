@@ -1,7 +1,7 @@
 from math import inf
 import time
 import psutil
-from revision.boolpy import boolpy
+from revision.symbols import boolpy
 # from revision.conv_test import reduce_array
 from set import Set
 from pysat.solvers import Glucose4
