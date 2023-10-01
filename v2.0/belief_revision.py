@@ -1,5 +1,6 @@
 from math import inf
 import time
+from utils.gen import generate_nested_lists
 import numpy as np
 import psutil
 
@@ -101,7 +102,6 @@ class BeliefRevision:
     for i in range(len(neg)):
         c[0] = neg[i]
         source.elements = np.append(source.elements, c)
-    print(source.elements.tolist(), assumption)
     # Return the result of solving a SAT problem, to check if the implication is true.
     return not self.solve_SAT(source.elements.tolist(),find_worlds=True, assumptions=assumption)[0]
 
@@ -110,14 +110,14 @@ class BeliefRevision:
     #Step 1
     K_IC_flag = self.solve_SAT(self.K_IC.elements)
     if not K_IC_flag: return self.implies(self.info, self.query)
-    if self.implies(self.K_IC,self.f_IC):
-      print("KB Implies New Info!")
-      if self.implies(self.f_IC, self.query):
-        print("New Info Implies Query")
-        return
-      else:
-        print("Query in contradiction with New Info")
-        return
+    # if self.implies(self.K_IC,self.f_IC):
+    #   print("KB Implies New Info!")
+    #   if self.implies(self.f_IC, self.query):
+    #     print("New Info Implies Query")
+    #     return
+    #   else:
+    #     print("Query in contradiction with New Info")
+    #     return
     #Step 1.5
     K_r = Set(elements = forget(self.K_IC.elements,list(self.f_IC.language),new_info=self.f_IC.elements.tolist()))
     #Step 2
@@ -173,23 +173,24 @@ class BeliefRevision:
     return Q
 
   def find_S(self, Q):
-    S = []
-    i = 0
-    while len(S)==0 and i<2*len(self.f_IC.language):
-      Q_new = [sublist[:] for sublist in Q]  # Create a copy of the original nested list
-      for sublist in Q_new:
-          for j in range(i):
-              sublist[j % len(sublist)] *= -1  # Modify the sublist by incrementing values
-          if sublist not in Q:
-            Q.append(sublist)
-      print(f"Q({i}): {Q}")
-      for q in Q:
+    S=[]
+    Q_new = []
+    new_list = Q
+    n = max([element for row in Q for element in row])
+    for i in range(n):
+      Q_new.extend(generate_nested_lists(new_list, i))
+      new_list = Q_new
+      print(f"Q({i}):",Q_new)
+      for q in Q_new:
         solver = Glucose4()
         for clause in self.K_IC.elements:
           solver.add_clause(clause)
-        if solver.solve(assumptions = q):S.append(q)
-      i += 1
-    return S
+        if solver.solve(assumptions = q):
+          if q not in S:
+            S.append(q)
+        if len(S)!=0: return S 
+        solver.delete()
+    return S 
   
   #NEED TO CHECK MORE EFFICIENT WAY TO FIND THE MODELS NEEDED
   def find_T(self,worlds,S):
