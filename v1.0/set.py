@@ -2,9 +2,10 @@ from pysat.formula import CNF
 
 class Set():
     def __init__(self, filename = None, elements = []):
-      res = []
-      [res.append(x) for x in elements if x not in res]
-      self.elements = res
+      # res = []
+      # [res.append(x) for x in elements if x not in res]
+      # self.elements = res
+      self.elements = elements
       try:
         self.load(filename)
       except:

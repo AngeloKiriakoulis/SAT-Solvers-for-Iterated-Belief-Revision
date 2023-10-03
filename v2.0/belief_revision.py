@@ -39,9 +39,9 @@ class BeliefRevision:
     # # #The given query that need to be checked 
     # self.query = Set("sets/query.cnf")
     # logging.debug("initializing sets")
-    K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
+    # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
     A = [[-1,-2]]
-    B = [[1],[-5]]
+    B = [[1,2]]
 
     self.max_element = max([element for row in K for element in row])
     # Generate a dictionary with random values
@@ -59,30 +59,29 @@ class BeliefRevision:
     
 
 
-  def solve_SAT(self, cnf , find_worlds = False, assumptions = []) -> Tuple[bool, Optional[List[int]]]:
+  def solve_SAT(self, cnf , find_worlds = False) -> Tuple[bool, Optional[List[int]]]:
     worlds = [] # Initialize an empty list to store possible worlds
     solver = Glucose4() # Create a Glucose4 solver instance
 
     # Loop through the clauses in 'cnf' and add them to the solver
     for clause in cnf:
-        try:
-            solver.add_clause(clause)
-        except RuntimeError:
-            # If a RuntimeError occurs when adding a clause, add a single-element list
-            solver.add_clause([clause])
-    try:
-      flag = solver.solve(assumptions=assumptions) # Attempt to solve the SAT problem with the specified assumptions
-    except TypeError: #More than 1 H results, need to check the disjunction of the result. If every result is false then all false, if one of them is true, all is true. 
-      for assumption in assumptions:
-        flag = solver.solve(assumptions=assumption)
-        if flag:break
-
+      try:
+        solver.add_clause(clause)
+      except RuntimeError:
+        # If a RuntimeError occurs when adding a clause, add a single-element list
+        solver.add_clause([clause])
+    # try:
+    #   flag = solver.solve(assumptions=assumptions) # Attempt to solve the SAT problem with the specified assumptions
+    # except TypeError: #More than 1 H results, need to check the disjunction of the result. If every result is false then all false, if one of them is true, all is true. 
+    #   for assumption in assumptions:
+    #     flag = solver.solve(assumptions=assumption)
+    #     if flag:break
+    flag = solver.solve()
     # If 'find_worlds' is True, enumerate all satisfying models and store them in 'worlds'
     if find_worlds == True:
       for model in solver.enum_models():
           worlds.append(model)
       # print("WORLDS: ", worlds)
-
     solver.delete() # Clean up and delete the solver instance
 
     # Return the result of the solver (flag) and the list of satisfying worlds
@@ -90,7 +89,14 @@ class BeliefRevision:
 
 
   def implies(self, source, query, assumption = []):
-    #Need to check cases where query are sub-lists of the source 
+    assumptions = []
+    try:
+      for multiple_assumption in assumption:
+        if self.solve_SAT(multiple_assumption)[0]:
+          assumptions.append(multiple_assumption)
+    except TypeError:
+      pass
+    
     neg = negate(query.elements) # Negate the elements in the 'query' and store them in 'neg'
     if len(source.elements) == 1:
       ###pass
@@ -103,23 +109,23 @@ class BeliefRevision:
         c[0] = neg[i]
         source.elements = np.append(source.elements, c)
     # Return the result of solving a SAT problem, to check if the implication is true.
-    return not self.solve_SAT(source.elements.tolist(),find_worlds=True, assumptions=assumption)[0]
+    c = np.empty(1, dtype=object) 
+
+    # Loop through the elements in 'neg' and append them to 'source.elements'
+    for assumption in assumptions:
+      for literal in assumption:
+        c[0] = [literal]
+        source.elements = np.append(source.elements, c)
+    print(source.elements.tolist())
+    return not self.solve_SAT(source.elements.tolist(),find_worlds=False)[0]
 
     
   def query_answering(self):
     #Step 1
     K_IC_flag = self.solve_SAT(self.K_IC.elements)
     if not K_IC_flag: return self.implies(self.info, self.query)
-    # if self.implies(self.K_IC,self.f_IC):
-    #   print("KB Implies New Info!")
-    #   if self.implies(self.f_IC, self.query):
-    #     print("New Info Implies Query")
-    #     return
-    #   else:
-    #     print("Query in contradiction with New Info")
-    #     return
     #Step 1.5
-    K_r = Set(elements = forget(self.K_IC.elements,list(self.f_IC.language),new_info=self.f_IC.elements.tolist()))
+    K_r = Set(elements = forget(self.K_IC.elements,list(self.f_IC.language)))
     #Step 2
     if len(self.f_IC.language.intersection(self.query.language)) == 0: 
       print(self.implies(K_r,self.query))
@@ -188,12 +194,16 @@ class BeliefRevision:
         if solver.solve(assumptions = q):
           if q not in S:
             S.append(q)
-        if len(S)!=0: return S 
-        solver.delete()
-    return S 
+            continue
+        # solver.delete() 
+      if len(S)!=0: return S
+    # return S 
   
   #NEED TO CHECK MORE EFFICIENT WAY TO FIND THE MODELS NEEDED
   def find_T(self,worlds,S):
+    if S is None:
+      print("NO")
+      return
     T=[]
     W = set()
     for w in worlds:

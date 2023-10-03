@@ -7,7 +7,7 @@ from pysat.solvers import Glucose4
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def forget(V, P, new_info):
+def forget(V, P):
   """
     ### "Forgets" the values of 'P' in a CNF formula 'V', by generating all combinations of True and False values for the variables in P.For each combination, it iterates over V and replaces the values based on the condition.
 
@@ -87,13 +87,13 @@ def forget(V, P, new_info):
         result_lists.append(result_list)
     else:
         continue
-
+  
   max_element = max([element for row in V for element in row])
   cnf = Tseitin(result_lists,max_element).transformation
   
   # Append non-conflicting clauses to the resultingCNF formula
-  for clause in non_conflicting_clauses:
-      cnf.append(clause)
+  # for clause in non_conflicting_clauses:
+  #     cnf.append(clause)
 
   return cnf
 

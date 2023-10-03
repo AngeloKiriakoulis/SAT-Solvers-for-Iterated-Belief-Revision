@@ -28,10 +28,7 @@ def boolpy(expression):
   else:
     expr = OR(*l)
   cnf = []
-  print("Expr:",expr,type(expr))
-  # print("SIMPLE:",expr.simplify())
-  print("CNF!@#: ", sympy.to_cnf(expr))
-  # cnf_expr = algebra.cnf(expr).simplify()
+  cnf_expr = algebra.cnf(expr).simplify()
   if type(expr) == AND:
     for arg in expr.args:
       cnf.append(int(str(arg)))
@@ -43,7 +40,6 @@ def boolpy(expression):
       cnf.append(l1)
 
 
-  print("CNF:",cnf)
 
 
   return cnf

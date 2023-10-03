@@ -28,7 +28,6 @@ def negate(formula) -> List:
   pos = CNF(from_clauses=formula)
 
   neg = pos.negate()
-  print(neg.clauses)
   #Checking if all clauses in the formula are just literals, and if so, returns the negation clauses directly
   if all(len(sublist) == 1 for sublist in formula): return neg.clauses
 

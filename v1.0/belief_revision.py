@@ -1,6 +1,10 @@
 from math import inf
+import os
+import random
 import time
 import psutil
+from revision.replace_largest import replace_larger_elements
+from revision.gen import generate_nested_lists
 from revision.symbols import boolpy
 # from revision.conv_test import reduce_array
 from set import Set
@@ -8,11 +12,8 @@ from pysat.solvers import Glucose4
 from revision.forget import forget
 from revision.negation import negate
 from typing import Optional,Tuple,List
-import logging
-from concurrent.futures import ProcessPoolExecutor
 
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class BeliefRevision:
   """This class represents an algorithm designed to perform belief revision in a knowledge base.
@@ -20,9 +21,17 @@ class BeliefRevision:
   on new information or evidence."""
 
   def __init__(self):
-    logging.debug("entering br")
     #The initial set of beliefs or knowledge base.
-    self.beliefs = Set("RTI_k3_n100_m429_1.cnf")
+
+    # here = os.path.dirname(os.path.abspath(__file__))
+    # filename = os.path.join(here, 'RTI_k3_n100_m429_1.cnf')
+    # self.beliefs = Set(filename=filename)
+    # K = self.beliefs.elements
+
+    self.beliefs = Set(filename="RTI_k3_n100_m429/RTI_k3_n100_m429_0.cnf")
+    # for i in range(1,100):
+    #   string = f"RTI_k3_n100_m429/RTI_k3_n100_m429_{i}.cnf"
+    #   self.beliefs += Set(filename=string)
     K = self.beliefs.elements
     # # #The new information or evidence to be incorporated into the knowledge base.
     # self.info = Set("sets/info.cnf")
@@ -31,11 +40,16 @@ class BeliefRevision:
     # # #The given query that need to be checked 
     # self.query = Set("sets/query.cnf")
     # logging.debug("initializing sets")
-    K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
-    self.beliefs = Set(elements = K)
-    A =  [[-1,-2]]
-    self.info = Set(elements = A)
+    # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
+    A = [[-1,-2]]
     B = [[1],[-5]]
+
+    self.max_element = max([element for row in K for element in row])
+    # Generate a dictionary with random values
+    self.weights = {i: random.randint(1, 5) for i in range(1,self.max_element+1)}
+    K,A,B,self.weights = replace_larger_elements(K,A,B,self.weights)
+    self.beliefs = Set(elements = K) 
+    self.info = Set(elements = A)
     self.query = Set(elements = B)
     try: 
       self.K_IC = self.beliefs + self.integrityConstraints
@@ -43,8 +57,6 @@ class BeliefRevision:
     except AttributeError: 
       self.K_IC = Set(elements = K)
       self.f_IC = Set(elements = A)
-    
-    self.weights = {0: 0, 1: 2, 2: 1, 3: 1, 4: 2, 5: 3, 6: 2, 7: 1, 8: 1, 9: 2, 10: 3, 11:1,12:3, 42:1}
 
   def solve_SAT(self, cnf , find_worlds = False, assumptions = []) -> Tuple[bool, Optional[List[int]]]:
     worlds = []
@@ -61,16 +73,13 @@ class BeliefRevision:
   def implies(self, source, query, assumption = []):
     #Need to check cases where query are sub-lists of the source    
     prob = source.elements + negate(query.elements)
-    print(prob)
     return not self.solve_SAT(prob, assumptions = assumption)[0]
     
   def query_answering(self):
-    logging.debug("entering qr")
     #Step 1
     K_IC_flag = self.solve_SAT(self.K_IC.elements)
     if not K_IC_flag: return self.implies(self.info, self.query)
     #Step 1.5
-    logging.debug("entering forget")
     K_r = Set(elements = forget(self.K_IC.elements,list(self.f_IC.language)))
     #Step 2
     if len(self.f_IC.language.intersection(self.query.language)) == 0: 
@@ -80,13 +89,13 @@ class BeliefRevision:
     f_IC_flag, f_IC_worlds = self.solve_SAT(self.f_IC.elements, find_worlds=True)
     if not f_IC_flag: return "New Information contain inconsistencies"
     #Steps 4-5
-    logging.debug("entering q")
     self.Q = self.find_Q(f_IC_worlds)
-    logging.debug("entering s")
     self.S = self.find_S(self.Q)
+    if self.S is None:
+      print("S is empty,no new info worlds satisfy the Knowledge Base")
+      return 
     print("S:",self.S)
     #Step 6
-    logging.debug("entering t")
     self.T = self.find_T(f_IC_worlds,self.S)
     print("T:",self.T)
     #Step 7
@@ -98,9 +107,11 @@ class BeliefRevision:
     for atom in self.W:
       c=0
       for item in atom:
-        c+=self.weights[item]
+        if item == 0:
+          temp_dict[tuple(atom)] = 0
+        else:
+          c+=self.weights[item]
       temp_dict[tuple(atom)] = c
-    print("TEMP DICT:",temp_dict)
     min_value = min(temp_dict.values())
     self.E = [key for key, value in temp_dict.items() if value == min_value]
     print("E:",self.E)
@@ -109,18 +120,15 @@ class BeliefRevision:
     self.R = [t[0] for t in self.T if tuple(t[1]) == self.E[0]]
     print("R:",self.R)
     #Step 10-11
-    logging.debug("making H")
     dnf = []
     for clause in self.R:
       l2 = []
       for atom in clause:
         l2.append([atom])
       dnf.append(l2)
-    print("dnf:",dnf)
     self.H = boolpy(dnf)
     print("H:",self.H)
     #Step 12
-    logging.debug("answering")
     print(self.implies(K_r,self.query,assumption=self.H))
 
   def find_Q(self, worlds):
@@ -134,23 +142,25 @@ class BeliefRevision:
     return Q
 
   def find_S(self, Q):
-    S = []
-    i = 0
-    while len(S)==0 and i<2*len(self.f_IC.language):
-      Q_new = [sublist[:] for sublist in Q]  # Create a copy of the original nested list
-      for sublist in Q_new:
-          for j in range(i):
-              sublist[j % len(sublist)] *= -1  # Modify the sublist by incrementing values
-          if sublist not in Q:
-            Q.append(sublist)
-      print(f"Q({i}): {Q}")
-      for q in Q:
+    S=[]
+    Q_new = []
+    new_list = Q
+    n = max([element for row in Q for element in row])
+    for i in range(n):
+      Q_new.extend(generate_nested_lists(new_list, i))
+      new_list = Q_new
+      print(f"Q({i}):",Q_new)
+      for q in Q_new:
         solver = Glucose4()
         for clause in self.K_IC.elements:
           solver.add_clause(clause)
-        if solver.solve(assumptions = q):S.append(q)
-      i += 1
-    return S
+        if solver.solve(assumptions = q):
+          if q not in S:
+            S.append(q)
+            continue
+        # solver.delete() 
+      if len(S)!=0: return S
+    # return S 
   
   #NEED TO CHECK MORE EFFICIENT WAY TO FIND THE MODELS NEEDED
   def find_T(self,worlds,S):
@@ -179,7 +189,6 @@ if __name__ == "__main__":
   start_time = time.time()
   # with ProcessPoolExecutor() as executor:
   BeliefRevision().query_answering()
-  logging.debug("exiting")
   end_time = time.time()
   execution_time = end_time - start_time
   print("Execution time:", execution_time, "seconds")
