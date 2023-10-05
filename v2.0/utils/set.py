@@ -22,7 +22,7 @@ class Set():
   def __add__(self, other):
     if isinstance(other, Set):
       # Concatenate the elements of self and other
-      return np.append(self.elements, other.elements, axis=0)
+      return Set(elements = np.append(self.elements, other.elements, axis=0))
       # Alternatively, create and return a new Set with concatenated elements
       # return Set(elements=self.elements + other.elements)
     else:

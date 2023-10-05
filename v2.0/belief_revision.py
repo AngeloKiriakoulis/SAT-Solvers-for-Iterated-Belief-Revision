@@ -3,6 +3,7 @@ import time
 from utils.gen import generate_nested_lists
 import numpy as np
 import psutil
+import xlsxwriter
 
 from utils.tseitin import Tseitin
 from utils.set import Set
@@ -24,32 +25,70 @@ class BeliefRevision:
   Belief revision is the process of updating or modifying a set of beliefs (knowledge base) based
   on new information or evidence."""
 
-  def __init__(self):
+  def __init__(self, filename):
     #The initial set of beliefs or knowledge base.
 
-    here = os.path.dirname(os.path.abspath(__file__))
-    filename = os.path.join(here, 'RTI_k3_n100_m429_1.cnf')
-    self.beliefs = Set(filename=filename)
-    K = self.beliefs.elements.tolist()
+    # # Huge KB Example
+    # self.beliefs = Set(filename=filename)
+    # for i in range(1,100):
+    #   KB_file = f"RTI_k3_n100_m429/RTI_k3_n100_m429_{i}.cnf"
+    #   self.beliefs += Set(filename=KB_file)
+    # K = self.beliefs.elements.tolist()
 
-    # # #The new information or evidence to be incorporated into the knowledge base.
-    # self.info = Set("sets/info.cnf")
-    # # #The integrity constraints of a domain
-    # self.integrityConstraints = Set("sets/ic.cnf")
-    # # #The given query that need to be checked 
-    # self.query = Set("sets/query.cnf")
-    # logging.debug("initializing sets")
-    # K = [[1, 2], [3, -1, 4, -2], [-1, 2], [1, 5], [-2, -5], [-4,-5]]
-    A = [[-1,-2]]
-    B = [[1,2]]
+    # Typical Example
+    # K = [[3, 5], [1, -2, 4, -5], [-3, 5], [3, 2], [-5, -2], [-4,-2]]
+    # print("KB:",K)
+    # A = [[-5,-3]]
+    # print("NI:",A)
+    # B = [[1],[-5]]
+    # print("Q:",B)
+    
+    # User Input
+    try:
+      here = os.path.dirname(os.path.abspath(__file__))
+      KB_input = input("\nProvide the initial Knowledge Base: ")
+      KB_file = os.path.join(here, KB_input)
+      if os.path.exists(KB_file):
+        self.beliefs = Set(filename=KB_file)
+        K = self.beliefs.elements.tolist()
+      else:
+        self.beliefs = Set(elements=eval(KB_input))
+        K = self.beliefs.elements
+
+      NI_input = input("Provide the New Information:")
+      NI_file = os.path.join(here, NI_input)
+      if os.path.exists(NI_file):
+        self.info = Set(filename=NI_file)
+        A = self.info.elements.tolist()
+      else:
+        self.info = Set(elements=eval(NI_input))
+        A = self.info.elements
+
+      Q_input = input("Provide the Query:")
+      Q_file = os.path.join(here, Q_input)
+      if os.path.exists(Q_file):
+        self.query = Set(filename=Q_file)
+        B = self.info.elements.tolist()
+      else:
+        self.query = Set(elements=eval(Q_input))
+        B = self.query.elements
+    except FileNotFoundError: 
+      print("Rerun the program with non-empty values")
+      raise SystemExit(0)
+
+    W_input = input("Provide the Belief Weights Dictionary:")
+    self.weights =eval(W_input)
 
     self.max_element = max([element for row in K for element in row])
+    
     # Generate a dictionary with random values
     self.weights = {i: random.randint(1, 5) for i in range(1,self.max_element+1)}
+    print("\n")
     K,A,B,self.weights = replace_larger_elements(K,A,B,self.weights)
-    self.beliefs = Set(elements = K) 
+    self.beliefs = Set(elements = K)
     self.info = Set(elements = A)
     self.query = Set(elements = B)
+    # print("Weights:", self.weights)
     try: 
       self.K_IC = self.beliefs + self.integrityConstraints
       self.f_IC = self.info + self.integrityConstraints
@@ -70,18 +109,12 @@ class BeliefRevision:
       except RuntimeError:
         # If a RuntimeError occurs when adding a clause, add a single-element list
         solver.add_clause([clause])
-    # try:
-    #   flag = solver.solve(assumptions=assumptions) # Attempt to solve the SAT problem with the specified assumptions
-    # except TypeError: #More than 1 H results, need to check the disjunction of the result. If every result is false then all false, if one of them is true, all is true. 
-    #   for assumption in assumptions:
-    #     flag = solver.solve(assumptions=assumption)
-    #     if flag:break
+
     flag = solver.solve()
     # If 'find_worlds' is True, enumerate all satisfying models and store them in 'worlds'
     if find_worlds == True:
       for model in solver.enum_models():
           worlds.append(model)
-      # print("WORLDS: ", worlds)
     solver.delete() # Clean up and delete the solver instance
 
     # Return the result of the solver (flag) and the list of satisfying worlds
@@ -95,12 +128,10 @@ class BeliefRevision:
         if self.solve_SAT(multiple_assumption)[0]:
           assumptions.append(multiple_assumption)
     except TypeError:
-      pass
+      assumptions = assumption
     
     neg = negate(query.elements) # Negate the elements in the 'query' and store them in 'neg'
-    if len(source.elements) == 1:
-      ###pass
-      pass####
+    
     """Numpy treats anything that is a list or tuple as a special item that you want to convert into an array at the outer level. To append an element to an object array without having the fact that it is a list in your way, you have to first create an array or element that is empty."""
     c = np.empty(1, dtype=object) 
 
@@ -113,19 +144,25 @@ class BeliefRevision:
 
     # Loop through the elements in 'neg' and append them to 'source.elements'
     for assumption in assumptions:
-      for literal in assumption:
-        c[0] = [literal]
+      try:
+        for literal in assumption:
+          c[0] = [literal]
+          source.elements = np.append(source.elements, c)
+          if self.solve_SAT(source.elements.tolist(),find_worlds=False)[0]: return False
+        return True
+      except TypeError:
+        c[0] = [assumption]
         source.elements = np.append(source.elements, c)
-    print(source.elements.tolist())
     return not self.solve_SAT(source.elements.tolist(),find_worlds=False)[0]
 
     
   def query_answering(self):
+    start_time = time.time()
     #Step 1
     K_IC_flag = self.solve_SAT(self.K_IC.elements)
     if not K_IC_flag: return self.implies(self.info, self.query)
     #Step 1.5
-    K_r = Set(elements = forget(self.K_IC.elements,list(self.f_IC.language)))
+    K_r = Set(elements = forget(self.K_IC.elements,list(self.f_IC.language),max_element = self.max_element))
     #Step 2
     if len(self.f_IC.language.intersection(self.query.language)) == 0: 
       print(self.implies(K_r,self.query))
@@ -137,6 +174,12 @@ class BeliefRevision:
     self.Q = self.find_Q(f_IC_worlds)
     self.S = self.find_S(self.Q)
     print("S:",(self.S))
+    if self.S is None:
+      print("New info variables have no worlds that satisfy the Knowledge Base")
+      end_time = time.time()
+      execution_time = end_time - start_time
+      print("Execution time:", execution_time, "seconds")
+      return
     #Step 6
     self.T = self.find_T(f_IC_worlds,self.S)
     print("T:",self.T)
@@ -167,6 +210,10 @@ class BeliefRevision:
     print("H:",self.H)
     #Step 12
     print(self.implies(K_r,self.query,assumption=self.H))
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print("Execution time:", execution_time, "seconds")
+    return execution_time
 
   def find_Q(self, worlds):
     Q=[]
@@ -195,11 +242,8 @@ class BeliefRevision:
           if q not in S:
             S.append(q)
             continue
-        # solver.delete() 
       if len(S)!=0: return S
-    # return S 
-  
-  #NEED TO CHECK MORE EFFICIENT WAY TO FIND THE MODELS NEEDED
+
   def find_T(self,worlds,S):
     if S is None:
       print("NO")
@@ -225,11 +269,18 @@ class BeliefRevision:
     return T
 
 if __name__ == "__main__":
-  start_time = time.time()
-  BeliefRevision().query_answering()
+  workbook = xlsxwriter.Workbook('version2.xlsx')
+  worksheet = workbook.add_worksheet()
+  first_time = time.time()
+  for i in range(1,100):
+    KB_file = f"RTI_k3_n100_m429/RTI_k3_n100_m429_{i}.cnf"
+    exec_time = BeliefRevision(KB_file).query_answering()
+    process = psutil.Process()
+    memory_usage = process.memory_info().rss / 1024 / 1024 # in megabytes
+    print("Memory usage:", memory_usage, "MB")
+    worksheet.write(f'A{i}', exec_time)
+    worksheet.write(f'B{i}', memory_usage)
   end_time = time.time()
-  execution_time = end_time - start_time
-  print("Execution time:", execution_time, "seconds")
-  process = psutil.Process()
-  memory_usage = process.memory_info().rss / 1024 / 1024 # in megabytes
-  print("Memory usage:", memory_usage, "MB")
+  print(end_time-first_time)
+  workbook.close()
+    

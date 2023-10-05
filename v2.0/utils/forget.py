@@ -7,7 +7,7 @@ from pysat.solvers import Glucose4
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def forget(V, P):
+def forget(V, P, max_element):
   """
     ### "Forgets" the values of 'P' in a CNF formula 'V', by generating all combinations of True and False values for the variables in P.For each combination, it iterates over V and replaces the values based on the condition.
 
@@ -29,14 +29,6 @@ def forget(V, P):
 
     """
   
-  # Generate all combinations of True and False values for the P list. We only keep those that satisfy the New Information SAT problem.
-  # combinations = []
-  # for combination in list(itertools.product([False, True], repeat=len(P))):
-  #   combo_list = [P[index] for index, value in enumerate(combination) if value]
-  #   if solve_SAT(new_info,find_worlds=False,assumptions=combo_list)[0]:
-  #     combinations.append(combination)
-
-
   combinations = list(itertools.product([False,True], repeat=len(P)))
   conflicting_clauses = []
   non_conflicting_clauses = []
@@ -88,10 +80,9 @@ def forget(V, P):
     else:
         continue
   
-  max_element = max([element for row in V for element in row])
   cnf = Tseitin(result_lists,max_element).transformation
-  
-  # Append non-conflicting clauses to the resultingCNF formula
+  print("Tseitin Transformation:", cnf)
+  # Append non-conflicting clauses to the resulting CNF formula
   # for clause in non_conflicting_clauses:
   #     cnf.append(clause)
 

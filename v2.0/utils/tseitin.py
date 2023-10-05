@@ -20,7 +20,11 @@ class Tseitin():
     
     # Append the auxiliary clauses to the 'transformation' list.
     for result in aux_result:
-        self.transformation.append(result)
+        if result in self.transformation:
+          self.transformation.remove(result)
+          self.transformation.append(result)
+        else:
+          self.transformation.append(result)
 
   # Function to perform Tseitin transformation on a component.
   def to_cnf(self, component):
