@@ -13,11 +13,14 @@ def replace_larger_elements(K, A, B, W):
 
   # Step 4: Iterate through ni_list and replace variables with available ones
   for i in ni_list:
-    m = min(available_list)
-    if m < i:
-      replace_dict[i] = m
-      available_list.remove(m)
-      available_list.insert(0, i)
+    try:
+      m = min(available_list)
+      if m < i:
+        replace_dict[i] = m
+        available_list.remove(m)
+        available_list.insert(0, i)
+    except:
+      return K, A, B, W
 
   # Step 5: Replace variables in the input lists (K, A, B) using replace_dict
   for rep in replace_dict.items():

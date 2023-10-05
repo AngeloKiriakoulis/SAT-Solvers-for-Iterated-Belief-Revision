@@ -81,7 +81,7 @@ def forget(V, P, max_element):
         continue
   
   cnf = Tseitin(result_lists,max_element).transformation
-  print("Tseitin Transformation:", cnf)
+  # print("Tseitin Transformation:", cnf)
   # Append non-conflicting clauses to the resulting CNF formula
   # for clause in non_conflicting_clauses:
   #     cnf.append(clause)

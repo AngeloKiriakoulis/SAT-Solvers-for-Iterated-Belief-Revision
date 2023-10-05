@@ -25,59 +25,62 @@ class BeliefRevision:
   Belief revision is the process of updating or modifying a set of beliefs (knowledge base) based
   on new information or evidence."""
 
-  def __init__(self, filename):
+  def __init__(self):
     #The initial set of beliefs or knowledge base.
 
     # # Huge KB Example
-    # self.beliefs = Set(filename=filename)
-    # for i in range(1,100):
+    file = "RTI_k3_n100_m429/RTI_k3_n100_m429_0.cnf"
+    self.beliefs = Set(filename=file)
+    # for i in range(2,3):
     #   KB_file = f"RTI_k3_n100_m429/RTI_k3_n100_m429_{i}.cnf"
     #   self.beliefs += Set(filename=KB_file)
-    # K = self.beliefs.elements.tolist()
+    K = self.beliefs.elements.tolist()
+    # A = [[-1,-2]]
+    # B = [[1],[-5]]
 
     # Typical Example
     # K = [[3, 5], [1, -2, 4, -5], [-3, 5], [3, 2], [-5, -2], [-4,-2]]
-    # print("KB:",K)
-    # A = [[-5,-3]]
-    # print("NI:",A)
-    # B = [[1],[-5]]
-    # print("Q:",B)
+    print("KB:",K)
+    A = [[-5,-3,6],[2,-4,-5,7],[8,9,10]]
+    print("NI:",A)
+    B = [[1],[-5]]
+    print("Q:",B)
     
     # User Input
-    try:
-      here = os.path.dirname(os.path.abspath(__file__))
-      KB_input = input("\nProvide the initial Knowledge Base: ")
-      KB_file = os.path.join(here, KB_input)
-      if os.path.exists(KB_file):
-        self.beliefs = Set(filename=KB_file)
-        K = self.beliefs.elements.tolist()
-      else:
-        self.beliefs = Set(elements=eval(KB_input))
-        K = self.beliefs.elements
+    # try:
+    #   here = os.path.dirname(os.path.abspath(__file__))
+    #   KB_input = input("\nProvide the initial Knowledge Base: ")
+    #   KB_file = os.path.join(here, KB_input)
+    #   if os.path.exists(KB_file):
+    #     self.beliefs = Set(filename=KB_file)
+    #     K = self.beliefs.elements.tolist()
+    #   else:
+    #     self.beliefs = Set(elements=eval(KB_input))
+    #     K = self.beliefs.elements
 
-      NI_input = input("Provide the New Information:")
-      NI_file = os.path.join(here, NI_input)
-      if os.path.exists(NI_file):
-        self.info = Set(filename=NI_file)
-        A = self.info.elements.tolist()
-      else:
-        self.info = Set(elements=eval(NI_input))
-        A = self.info.elements
+    #   NI_input = input("Provide the New Information:")
+    #   NI_file = os.path.join(here, NI_input)
+    #   if os.path.exists(NI_file):
+    #     self.info = Set(filename=NI_file)
+    #     A = self.info.elements.tolist()
+    #   else:
+    #     self.info = Set(elements=eval(NI_input))
+    #     A = self.info.elements
 
-      Q_input = input("Provide the Query:")
-      Q_file = os.path.join(here, Q_input)
-      if os.path.exists(Q_file):
-        self.query = Set(filename=Q_file)
-        B = self.info.elements.tolist()
-      else:
-        self.query = Set(elements=eval(Q_input))
-        B = self.query.elements
-    except FileNotFoundError: 
-      print("Rerun the program with non-empty values")
-      raise SystemExit(0)
+    #   Q_input = input("Provide the Query:")
+    #   Q_file = os.path.join(here, Q_input)
+    #   if os.path.exists(Q_file):
+    #     self.query = Set(filename=Q_file)
+    #     B = self.info.elements.tolist()
+    #   else:
+    #     self.query = Set(elements=eval(Q_input))
+    #     B = self.query.elements
+    # except FileNotFoundError: 
+    #   print("Rerun the program with non-empty values")
+    #   raise SystemExit(0)
 
-    W_input = input("Provide the Belief Weights Dictionary:")
-    self.weights =eval(W_input)
+    # W_input = input("Provide the Belief Weights Dictionary:")
+    # self.weights =eval(W_input)
 
     self.max_element = max([element for row in K for element in row])
     
@@ -114,9 +117,9 @@ class BeliefRevision:
     # If 'find_worlds' is True, enumerate all satisfying models and store them in 'worlds'
     if find_worlds == True:
       for model in solver.enum_models():
-          worlds.append(model)
+        worlds.append(model)
+      print(len(worlds))
     solver.delete() # Clean up and delete the solver instance
-
     # Return the result of the solver (flag) and the list of satisfying worlds
     return flag, worlds
 
@@ -269,18 +272,9 @@ class BeliefRevision:
     return T
 
 if __name__ == "__main__":
-  workbook = xlsxwriter.Workbook('version2.xlsx')
-  worksheet = workbook.add_worksheet()
-  first_time = time.time()
-  for i in range(1,100):
-    KB_file = f"RTI_k3_n100_m429/RTI_k3_n100_m429_{i}.cnf"
-    exec_time = BeliefRevision(KB_file).query_answering()
-    process = psutil.Process()
-    memory_usage = process.memory_info().rss / 1024 / 1024 # in megabytes
-    print("Memory usage:", memory_usage, "MB")
-    worksheet.write(f'A{i}', exec_time)
-    worksheet.write(f'B{i}', memory_usage)
-  end_time = time.time()
-  print(end_time-first_time)
-  workbook.close()
+  BeliefRevision().query_answering()
+  process = psutil.Process()
+  memory_usage = process.memory_info().rss / 1024 / 1024 # in megabytes
+  print("Memory usage:", memory_usage, "MB")
+
     
